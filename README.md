@@ -11,6 +11,27 @@ a separate AppKit executable with no third-party dependencies, WebViews,
 transcript scanner, plugin interpreter, widget, or background cost-history
 ingestion. It can run alongside CodexBar without touching its data.
 
+## Preview
+
+Screenshots use `--demo`, which shows fictional accounts and quotas.
+
+<p>
+  <img src="docs/images/menu-geral.png" width="340" alt="Geral tab: weekly usage per provider">
+  <img src="docs/images/menu-claude.png" width="340" alt="Claude tab: weighted weekly and five-hour pools and accounts">
+</p>
+<p>
+  <img src="docs/images/menu-codex.png" width="340" alt="Codex tab: weighted pools and accounts">
+  <img src="docs/images/menu-antigravity.png" width="340" alt="Antigravity tab: Gemini and Claude/GPT groups">
+</p>
+
+Menu bar item, following the selected tab:
+
+<img src="docs/images/menu-bar-item.png" width="70" alt="Menu bar item with the Claude icon and 54%">
+
+Configurações:
+
+<img src="docs/images/settings.png" width="528" alt="Settings: provider visibility and order, menu bar content and refresh interval">
+
 ## Build and run
 
 macOS 14 or newer and Swift 6.2 or newer are required. The standalone AppKit app
@@ -43,9 +64,9 @@ provider, or switch to the five-hour window. ` !` marks a failed or overdue
 update.
 
 The menu opens with a provider grid like the full CodexBar: Geral plus one tab
-per visible provider, each with a small weekly usage bar. Clicking a tab swaps
-the content below without closing the menu, and the menu reopens on the last
-tab. Geral lists one row per provider; clicking a row opens its tab. Claude and
+per visible provider, each with a small weekly usage bar. Clicking a tab reopens
+the menu on that tab at once, so the menu measures the new content, and the
+menu later opens on the last tab. Geral lists one row per provider; clicking a row opens its tab. Claude and
 Codex show the weighted 7d and 5h pools and the accounts; Antigravity shows
 every group the CLI reports.
 
@@ -55,6 +76,14 @@ minutes). Changes apply immediately and live in the app's UserDefaults. A
 hidden provider is not queried: hiding Claude or Codex skips those proxy
 accounts, and hiding Antigravity skips `agy` entirely. Turning a provider back
 on refreshes it at once. `--settings` opens the window at launch.
+
+`--demo` replaces live data with fictional accounts and quotas, makes no proxy
+or `agy` calls, and keeps its preferences in a separate
+`dev.yuri.CodexBarPersonal.demo` domain. It is meant for screenshots:
+
+```sh
+open -n '.build/app/CodexBar Personal.app' --args --demo
+```
 
 ## Behavior and resource limits
 

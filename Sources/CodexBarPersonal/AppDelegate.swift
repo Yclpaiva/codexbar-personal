@@ -7,7 +7,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private let grid = ProviderGridView()
     private let gridItem = NSMenuItem()
-    private var settings = PersonalSettings.load(from: .standard)
+    /// `--demo` shows fictional quotas for screenshots, with its own preferences and no network or agy.
+    private let demo = CommandLine.arguments.contains("--demo")
+    private lazy var defaults = self.demo ? UserDefaults(suiteName: "dev.yuri.CodexBarPersonal.demo") ?? .standard
+        : .standard
+    private lazy var settings = PersonalSettings.load(from: self.defaults)
     private var menuOpen = false
 
     private var proxy: ProxyClient?
@@ -36,11 +40,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.statusItem = item
         self.gridItem.view = self.grid
         self.grid.onSelect = { [weak self] tab in self?.select(tab) }
-        self.antigravity = AntigravityClient.locate().map { AntigravityClient(executable: $0) }
-        do {
-            self.proxy = try client()
-        } catch {
-            self.proxyError = error.localizedDescription
+        if self.demo {
+            self.snapshot = Demo.snapshot()
+            self.antigravityQuota = Demo.antigravity()
+        } else {
+            self.antigravity = AntigravityClient.locate().map { AntigravityClient(executable: $0) }
+            do {
+                self.proxy = try client()
+            } catch {
+                self.proxyError = error.localizedDescription
+            }
         }
         self.refresh(force: true)
         self.scheduleTimer()
@@ -111,7 +120,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Hidden providers are not queried. Manual attempts are spaced by 15 seconds unless forced by a
     /// settings change that made a provider visible.
     private func refresh(force: Bool) {
-        guard force || self.lastAttempt.map({ Date().timeIntervalSince($0) >= 15 }) ?? true else { return }
+        guard !self.demo,
+              force || self.lastAttempt.map({ Date().timeIntervalSince($0) >= 15 }) ?? true else { return }
         self.lastAttempt = Date()
         let visible = self.settings.visible
         if visible.contains(.antigravity) { self.refreshAntigravity() }
@@ -200,16 +210,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.gridItem.view = self.grid
     }
 
-    /// Changes the tab while the menu stays open; only the items below the grid are replaced.
+    /// Changes the tab by reopening the menu at once. NSMenu measures its text column when it opens,
+    /// so items swapped in while it stays open would be truncated to the previous tab's width.
     private func select(_ tab: MenuProvider?) {
         self.settings.lastTab = tab
-        self.settings.save(to: .standard)
+        self.settings.save(to: self.defaults)
         self.updateStatusItem()
-        self.updateGrid()
-        while self.menu.items.count > 1 {
-            self.menu.removeItem(at: 1)
-        }
-        self.addContent()
+        self.menu.cancelTrackingWithoutAnimation()
+        DispatchQueue.main.async { [weak self] in self?.statusItem?.button?.performClick(nil) }
     }
 
     private func addContent() {
@@ -263,7 +271,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func addProxy(_ provider: Provider) {
         if let proxyError { self.heading(proxyError) }
-        if self.proxy == nil { self.heading("Inicie pelo launcher para acessar o proxy.") }
+        if self.proxy == nil, !self.demo { self.heading("Inicie pelo launcher para acessar o proxy.") }
         guard let snapshot else { return }
         for key in ["7d", "5h"] {
             guard let pool = snapshot.pools.first(where: { $0.provider == provider && $0.key == key }) else {
@@ -303,7 +311,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func addAntigravity() {
-        if self.antigravity == nil { self.heading(PersonalError.antigravityUnavailable.localizedDescription) }
+        if self.antigravity == nil,
+           !self.demo { self.heading(PersonalError.antigravityUnavailable.localizedDescription) }
         if let antigravityError { self.heading(antigravityError) }
         guard let quota = self.antigravityQuota else {
             if self.antigravityTask != nil { self.heading("Consultando o agy…") }
@@ -367,7 +376,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func subtitle(_ provider: MenuProvider) -> (text: String, available: Bool) {
         guard let proxy = provider.proxy else {
-            return self.antigravity == nil
+            return self.antigravity == nil && !self.demo
                 ? (PersonalError.antigravityUnavailable.localizedDescription, false)
                 : ("agy CLI · conta logada no agy", true)
         }
@@ -381,7 +390,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         changed.lastTab = self.settings.lastTab
         let previous = self.settings
         self.settings = changed
-        changed.save(to: .standard)
+        changed.save(to: self.defaults)
         if previous.refreshMinutes != changed.refreshMinutes { self.scheduleTimer() }
         if !Set(changed.visible).subtracting(previous.visible).isEmpty { self.refresh(force: true) }
         self.updateStatusItem()

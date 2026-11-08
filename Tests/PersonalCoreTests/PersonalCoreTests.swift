@@ -282,6 +282,8 @@ struct PersonalCoreTests {
         try expect(reloaded.headline { usage[$0] }?.provider == .claude)
         try expect(reloaded.headline { _ in nil } == nil)
         try expect(BarMode.choices.allSatisfy { BarMode(stored: $0.stored) == $0 })
+        let now = Date()
+        try expect(Display.reset(now.addingTimeInterval(125 * 60 + 30), now: now) == "reset em 2h05")
     }
 
     func `hidden proxy providers cost no account reads`() async throws {

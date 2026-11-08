@@ -7,6 +7,7 @@ import PersonalCore
 if ProcessInfo.processInfo.environment["CLIPROXY_MANAGEMENT_KEY"] == nil,
    !CommandLine.arguments.contains("--history"),
    !CommandLine.arguments.contains("--antigravity"),
+   !CommandLine.arguments.contains("--demo"),
    !CommandLine.arguments.contains("--credential-relaunch")
 {
     let launcher = Process()

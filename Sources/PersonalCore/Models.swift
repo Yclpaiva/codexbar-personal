@@ -150,7 +150,7 @@ public enum Display {
         guard let date else { return "reset indisponível" }
         let minutes = max(0, Int(date.timeIntervalSince(now) / 60))
         if minutes < 60 { return "reset em \(minutes) min" }
-        if minutes < 2880 { return "reset em \(minutes / 60)h\(minutes % 60)" }
+        if minutes < 2880 { return String(format: "reset em %dh%02d", minutes / 60, minutes % 60) }
         return "reset em \(minutes / 1440)d \(minutes % 1440 / 60)h"
     }
 }
