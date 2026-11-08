@@ -1,0 +1,485 @@
+{
+  "fetchedAt": "2026-11-08T17:55:55Z",
+  "models": {
+    "claude:claude-fable-5": {
+      "cacheRead": 1,
+      "cacheWrite": 12.5,
+      "input": 10,
+      "output": 50
+    },
+    "claude:claude-fable-5-1": {
+      "cacheRead": 0.25,
+      "cacheWrite": 12.5,
+      "input": 10,
+      "output": 50
+    },
+    "claude:claude-haiku-4-5": {
+      "cacheRead": 0.1,
+      "cacheWrite": 1.25,
+      "input": 1,
+      "output": 5
+    },
+    "claude:claude-haiku-4-5-20251001": {
+      "cacheRead": 0.1,
+      "cacheWrite": 1.25,
+      "input": 1,
+      "output": 5
+    },
+    "claude:claude-haiku-5-5": {
+      "cacheRead": 0.01,
+      "cacheWrite": 0.125,
+      "input": 0.1,
+      "output": 0.5,
+      "tiers": [
+        {
+          "cacheRead": 0.05,
+          "cacheWrite": 0.625,
+          "input": 0.5,
+          "output": 2.5,
+          "threshold": 100000
+        }
+      ]
+    },
+    "claude:claude-opus-4-5": {
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "input": 5,
+      "output": 25
+    },
+    "claude:claude-opus-4-5-20251101": {
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "input": 5,
+      "output": 25
+    },
+    "claude:claude-opus-4-6": {
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "input": 5,
+      "output": 25
+    },
+    "claude:claude-opus-4-7": {
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "input": 5,
+      "output": 25
+    },
+    "claude:claude-opus-4-8": {
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "input": 5,
+      "output": 25
+    },
+    "claude:claude-opus-5": {
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "input": 5,
+      "output": 25
+    },
+    "claude:claude-opus-5-5": {
+      "cacheRead": 0.2,
+      "cacheWrite": 5,
+      "input": 4,
+      "output": 20
+    },
+    "claude:claude-sonnet-4-5": {
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75,
+      "input": 3,
+      "output": 15
+    },
+    "claude:claude-sonnet-4-5-20250929": {
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75,
+      "input": 3,
+      "output": 15
+    },
+    "claude:claude-sonnet-4-6": {
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75,
+      "input": 3,
+      "output": 15
+    },
+    "claude:claude-sonnet-5": {
+      "cacheRead": 0.2,
+      "cacheWrite": 2.5,
+      "input": 2,
+      "output": 10
+    },
+    "claude:claude-sonnet-5-5": {
+      "cacheRead": 0.1,
+      "cacheWrite": 2.5,
+      "input": 2,
+      "output": 10
+    },
+    "codex:gpt-3.5-turbo": {
+      "cacheRead": 0,
+      "input": 0.5,
+      "output": 1.5
+    },
+    "codex:gpt-4": {
+      "input": 30,
+      "output": 60
+    },
+    "codex:gpt-4-turbo": {
+      "input": 10,
+      "output": 30
+    },
+    "codex:gpt-4.1": {
+      "cacheRead": 0.5,
+      "input": 2,
+      "output": 8
+    },
+    "codex:gpt-4.1-mini": {
+      "cacheRead": 0.1,
+      "input": 0.4,
+      "output": 1.6
+    },
+    "codex:gpt-4.1-nano": {
+      "cacheRead": 0.025,
+      "input": 0.1,
+      "output": 0.4
+    },
+    "codex:gpt-4o": {
+      "cacheRead": 1.25,
+      "input": 2.5,
+      "output": 10
+    },
+    "codex:gpt-4o-2024-05-13": {
+      "input": 5,
+      "output": 15
+    },
+    "codex:gpt-4o-2024-08-06": {
+      "cacheRead": 1.25,
+      "input": 2.5,
+      "output": 10
+    },
+    "codex:gpt-4o-2024-11-20": {
+      "cacheRead": 1.25,
+      "input": 2.5,
+      "output": 10
+    },
+    "codex:gpt-4o-mini": {
+      "cacheRead": 0.075,
+      "input": 0.15,
+      "output": 0.6
+    },
+    "codex:gpt-5": {
+      "cacheRead": 0.125,
+      "input": 1.25,
+      "output": 10
+    },
+    "codex:gpt-5-mini": {
+      "cacheRead": 0.025,
+      "input": 0.25,
+      "output": 2
+    },
+    "codex:gpt-5-nano": {
+      "cacheRead": 0.005,
+      "input": 0.05,
+      "output": 0.4
+    },
+    "codex:gpt-5-pro": {
+      "input": 15,
+      "output": 120
+    },
+    "codex:gpt-5.1": {
+      "cacheRead": 0.125,
+      "input": 1.25,
+      "output": 10
+    },
+    "codex:gpt-5.2": {
+      "cacheRead": 0.175,
+      "input": 1.75,
+      "output": 14
+    },
+    "codex:gpt-5.2-chat-latest": {
+      "cacheRead": 0.175,
+      "input": 1.75,
+      "output": 14
+    },
+    "codex:gpt-5.2-pro": {
+      "input": 21,
+      "output": 168
+    },
+    "codex:gpt-5.3-chat-latest": {
+      "cacheRead": 0.175,
+      "input": 1.75,
+      "output": 14
+    },
+    "codex:gpt-5.3-codex": {
+      "cacheRead": 0.175,
+      "input": 1.75,
+      "output": 14
+    },
+    "codex:gpt-5.3-codex-spark": {
+      "cacheRead": 0.175,
+      "input": 1.75,
+      "output": 14
+    },
+    "codex:gpt-5.4": {
+      "cacheRead": 0.25,
+      "input": 2.5,
+      "output": 15,
+      "tiers": [
+        {
+          "cacheRead": 0.5,
+          "input": 5,
+          "output": 22.5,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-5.4-mini": {
+      "cacheRead": 0.075,
+      "input": 0.75,
+      "output": 4.5
+    },
+    "codex:gpt-5.4-nano": {
+      "cacheRead": 0.02,
+      "input": 0.2,
+      "output": 1.25
+    },
+    "codex:gpt-5.4-pro": {
+      "input": 30,
+      "output": 180,
+      "tiers": [
+        {
+          "input": 60,
+          "output": 270,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-5.5": {
+      "cacheRead": 0.5,
+      "input": 5,
+      "output": 30,
+      "tiers": [
+        {
+          "cacheRead": 1,
+          "input": 10,
+          "output": 45,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-5.5-pro": {
+      "input": 30,
+      "output": 180,
+      "tiers": [
+        {
+          "input": 60,
+          "output": 270,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-5.6": {
+      "cacheRead": 0.4,
+      "cacheWrite": 5,
+      "input": 4,
+      "output": 20,
+      "tiers": [
+        {
+          "cacheRead": 0.8,
+          "cacheWrite": 10,
+          "input": 8,
+          "output": 30,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-5.6-luna": {
+      "cacheRead": 0.02,
+      "cacheWrite": 0.25,
+      "input": 0.2,
+      "output": 1.2,
+      "tiers": [
+        {
+          "cacheRead": 0.04,
+          "cacheWrite": 0.5,
+          "input": 0.4,
+          "output": 1.8,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-5.6-sol": {
+      "cacheRead": 0.4,
+      "cacheWrite": 5,
+      "input": 4,
+      "output": 20,
+      "tiers": [
+        {
+          "cacheRead": 0.8,
+          "cacheWrite": 10,
+          "input": 8,
+          "output": 30,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-5.6-terra": {
+      "cacheRead": 0.2,
+      "cacheWrite": 2.5,
+      "input": 2,
+      "output": 12,
+      "tiers": [
+        {
+          "cacheRead": 0.4,
+          "cacheWrite": 5,
+          "input": 4,
+          "output": 18,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-6-astra": {
+      "cacheRead": 1,
+      "cacheWrite": 12.5,
+      "input": 10,
+      "output": 50,
+      "tiers": [
+        {
+          "cacheRead": 2,
+          "cacheWrite": 25,
+          "input": 20,
+          "output": 75,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-6-luna": {
+      "cacheRead": 0.01,
+      "cacheWrite": 0.125,
+      "input": 0.1,
+      "output": 0.5,
+      "tiers": [
+        {
+          "cacheRead": 0.02,
+          "cacheWrite": 0.25,
+          "input": 0.2,
+          "output": 0.75,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-6-sol": {
+      "cacheRead": 0.2,
+      "cacheWrite": 2.5,
+      "input": 2,
+      "output": 10,
+      "tiers": [
+        {
+          "cacheRead": 0.4,
+          "cacheWrite": 5,
+          "input": 4,
+          "output": 15,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-6.1-sol": {
+      "cacheRead": 0.1,
+      "cacheWrite": 2.5,
+      "input": 2,
+      "output": 10,
+      "tiers": [
+        {
+          "cacheRead": 0.2,
+          "cacheWrite": 5,
+          "input": 4,
+          "output": 15,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-6.1-terra": {
+      "cacheRead": 0.05,
+      "cacheWrite": 1.25,
+      "input": 1,
+      "output": 5,
+      "tiers": [
+        {
+          "cacheRead": 0.1,
+          "cacheWrite": 2.5,
+          "input": 2,
+          "output": 7.5,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-daybreak-blue-latest": {
+      "cacheRead": 0.4,
+      "cacheWrite": 5,
+      "input": 4,
+      "output": 20,
+      "tiers": [
+        {
+          "cacheRead": 0.8,
+          "cacheWrite": 10,
+          "input": 8,
+          "output": 30,
+          "threshold": 272000
+        }
+      ]
+    },
+    "codex:gpt-daybreak-red-latest": {
+      "cacheRead": 1.25,
+      "cacheWrite": 15.625,
+      "input": 12.5,
+      "output": 75
+    },
+    "codex:gpt-image-2": {
+      "cacheRead": 1.25,
+      "input": 5,
+      "output": 30
+    },
+    "codex:gpt-realtime-2.1": {
+      "cacheRead": 0.4,
+      "input": 4,
+      "output": 24
+    },
+    "codex:o1": {
+      "cacheRead": 7.5,
+      "input": 15,
+      "output": 60
+    },
+    "codex:o1-pro": {
+      "input": 150,
+      "output": 600
+    },
+    "codex:o3": {
+      "cacheRead": 0.5,
+      "input": 2,
+      "output": 8
+    },
+    "codex:o3-mini": {
+      "cacheRead": 0.55,
+      "input": 1.1,
+      "output": 4.4
+    },
+    "codex:o3-pro": {
+      "input": 20,
+      "output": 80
+    },
+    "codex:o4-mini": {
+      "cacheRead": 0.275,
+      "input": 1.1,
+      "output": 4.4
+    },
+    "codex:text-embedding-3-large": {
+      "input": 0.13,
+      "output": 0
+    },
+    "codex:text-embedding-3-small": {
+      "input": 0.02,
+      "output": 0
+    },
+    "codex:text-embedding-ada-002": {
+      "input": 0.1,
+      "output": 0
+    }
+  }
+}

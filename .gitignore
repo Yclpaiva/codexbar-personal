@@ -1,0 +1,7 @@
+.build/
+.swiftpm/
+__pycache__/
+*.pyc
+.DS_Store
+# Design mocks use real local account data and stay out of the repository.
+mocks/
