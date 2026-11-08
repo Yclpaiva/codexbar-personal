@@ -5,11 +5,11 @@ import PersonalCore
 final class DashboardController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate {
     var onClose: (() -> Void)?
     private let period = NSSegmentedControl(
-        labels: ["7 dias", "30 dias", "90 dias"],
+        labels: [7, 30, 90].map { L10n.tr("%ld days", $0) },
         trackingMode: .selectOne,
         target: nil,
         action: nil)
-    private let subtitle = NSTextField(labelWithString: "Carregando histórico…")
+    private let subtitle = NSTextField(labelWithString: L10n.tr("Loading history…"))
     private let cost = NSTextField(labelWithString: "—")
     private let tokens = NSTextField(labelWithString: "—")
     private let requests = NSTextField(labelWithString: "—")
@@ -27,7 +27,7 @@ final class DashboardController: NSWindowController, NSWindowDelegate, NSTableVi
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false)
-        window.title = "CodexBar Personal · Histórico do proxy"
+        window.title = "CodexBar Personal · " + L10n.tr("Proxy history")
         window.minSize = NSSize(width: 690, height: 540)
         window.isReleasedWhenClosed = false
         window.center()
@@ -53,12 +53,12 @@ final class DashboardController: NSWindowController, NSWindowDelegate, NSTableVi
             root.topAnchor.constraint(equalTo: content.topAnchor, constant: 22),
             root.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -20),
         ])
-        let title = NSTextField(labelWithString: "Uso do proxy")
+        let title = NSTextField(labelWithString: L10n.tr("Proxy usage"))
         title.font = .systemFont(ofSize: 26, weight: .semibold)
         self.period.selectedSegment = 1
         self.period.target = self
         self.period.action = #selector(self.periodChanged)
-        let refresh = NSButton(title: "Atualizar", target: self, action: #selector(self.periodChanged))
+        let refresh = NSButton(title: L10n.tr("Refresh"), target: self, action: #selector(self.periodChanged))
         refresh.bezelStyle = .rounded
         let spacer = NSView()
         let header = NSStackView(views: [title, spacer, self.period, refresh])
@@ -68,9 +68,9 @@ final class DashboardController: NSWindowController, NSWindowDelegate, NSTableVi
         self.subtitle.textColor = .secondaryLabelColor
         root.addArrangedSubview(self.subtitle)
         let metrics = NSStackView(views: [
-            self.metric("Custo estimado", self.cost),
+            self.metric(L10n.tr("Estimated cost"), self.cost),
             self.metric("Tokens", self.tokens),
-            self.metric("Requisições", self.requests),
+            self.metric(L10n.tr("Requests"), self.requests),
         ])
         metrics.distribution = .fillEqually
         metrics.spacing = 24
@@ -79,14 +79,14 @@ final class DashboardController: NSWindowController, NSWindowDelegate, NSTableVi
         root.addArrangedSubview(self.chart)
         self.chart.heightAnchor.constraint(equalToConstant: 150).isActive = true
         self.chart.widthAnchor.constraint(equalTo: root.widthAnchor).isActive = true
-        let section = NSTextField(labelWithString: "Por modelo")
+        let section = NSTextField(labelWithString: L10n.tr("By model"))
         section.font = .systemFont(ofSize: 14, weight: .semibold)
         root.addArrangedSubview(section)
         for (identifier, title, width) in [
-            ("model", "Modelo", 300.0),
-            ("provider", "Provedor", 100.0),
+            ("model", L10n.tr("Model"), 300.0),
+            ("provider", L10n.tr("Provider"), 100.0),
             ("tokens", "Tokens", 130.0),
-            ("cost", "Custo estimado", 150.0),
+            ("cost", L10n.tr("Estimated cost"), 150.0),
         ] {
             let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(identifier))
             column.title = title
@@ -131,7 +131,7 @@ final class DashboardController: NSWindowController, NSWindowDelegate, NSTableVi
         self.generation += 1
         let generation = self.generation
         let days = [7, 30, 90][self.period.selectedSegment]
-        self.subtitle.stringValue = "Atualizando…"
+        self.subtitle.stringValue = L10n.tr("Refreshing…")
         self.loadTask = Task { [weak self] in
             let result: Result<UsageReport, Error>
             do { result = try await .success(HistoryService.shared.load(days: days)) } catch { result = .failure(error)
@@ -152,20 +152,21 @@ final class DashboardController: NSWindowController, NSWindowDelegate, NSTableVi
                 self.tokens.stringValue = Display.compact(report.totals.tokens)
                 self.requests.stringValue = String(report.totals.requests)
                 let time = report.generatedAt.formatted(date: .omitted, time: .shortened)
-                self.subtitle.stringValue = "\(report.since) a \(report.until) · atualizado às \(time)"
+                self.subtitle.stringValue = L10n.tr("%@ to %@ · updated at %@", report.since, report.until, time)
                 self.chart.days = report.daily
                 self.table.reloadData()
-                self.footer.stringValue = "CLIProxyAPI · \(report.totals.failed) tentativas com falha incluídas. "
-                    +
-                    (report.totals
-                        .unpricedRequests > 0 ?
-                        "\(report.totals.unpricedRequests) requisições sem preço; custo mostra o subtotal conhecido. " :
-                        "")
-                    + "Históricos de outros aplicativos são mantidos separadamente."
+                self.footer.stringValue = [
+                    "CLIProxyAPI · " + L10n.tr("%ld failed attempts included.", report.totals.failed),
+                    report.totals.unpricedRequests > 0
+                        ? L10n.tr(
+                            "%ld requests without a price; cost shows the known subtotal.",
+                            report.totals.unpricedRequests) : nil,
+                    L10n.tr("History from other apps is kept separately."),
+                ].compactMap(\.self).joined(separator: " ")
             case let .failure(error):
-                self.subtitle.stringValue = "Histórico indisponível"
+                self.subtitle.stringValue = L10n.tr("History unavailable")
                 self.footer.stringValue = (error as? PersonalError)?.localizedDescription
-                    ?? "Não foi possível carregar os dados locais."
+                    ?? L10n.tr("Could not load the local data.")
             }
         }
     }
@@ -193,7 +194,8 @@ final class DashboardController: NSWindowController, NSWindowDelegate, NSTableVi
         case "model": model.model
         case "provider": model.provider.title
         case "tokens": Display.compact(model.totals.tokens)
-        default: model.totals.unpricedRequests == model.totals.requests ? "Sem preço" : Self.money(model.totals.costUSD)
+        default: model.totals.unpricedRequests == model.totals.requests ? L10n.tr("No price") : Self
+            .money(model.totals.costUSD)
         }
         cell.textField?.stringValue = text
         cell.toolTip = text
@@ -218,8 +220,8 @@ private final class UsageChart: NSView {
     var days: [DailyUsage] = [] {
         didSet {
             self.toolTip = self.days.filter { $0.totals.tokens > 0 }
-                .map { "\($0.day): \(Display.compact($0.totals.tokens)) tokens" }.joined(separator: "\n")
-            self.setAccessibilityLabel("Tokens por dia. \(self.toolTip ?? "Sem dados")")
+                .map { L10n.tr("%@: %@ tokens", $0.day, Display.compact($0.totals.tokens)) }.joined(separator: "\n")
+            self.setAccessibilityLabel(L10n.tr("Tokens per day. %@", self.toolTip ?? L10n.tr("No data")))
             self.needsDisplay = true
         }
     }
@@ -260,7 +262,7 @@ private final class UsageChart: NSView {
         NSString(string: self.days.last?.day ?? "").draw(
             at: NSPoint(x: max(plot.minX, plot.maxX - 65), y: 2),
             withAttributes: attributes)
-        NSString(string: "Tokens por dia · máximo \(Display.compact(maximum))").draw(
+        NSString(string: L10n.tr("Tokens per day · max %@", Display.compact(maximum))).draw(
             at: NSPoint(x: plot.minX, y: self.bounds.maxY - 15),
             withAttributes: attributes)
     }

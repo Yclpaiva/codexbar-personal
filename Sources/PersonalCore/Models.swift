@@ -126,31 +126,32 @@ public enum PersonalError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .missingCredential: "Credencial de gestão indisponível. Inicie pelo launcher do agent-kit."
-        case .invalidURL: "O proxy deve usar HTTP em 127.0.0.1."
-        case let .http(status): "Consulta indisponível (HTTP \(status))."
-        case .invalidResponse: "O serviço retornou dados incompatíveis."
-        case .historyUnavailable: "Não foi possível ler o histórico local do proxy."
-        case .invalidHistory: "O histórico contém dados incompatíveis."
-        case .antigravityUnavailable: "agy não encontrado. Instale o Antigravity CLI."
-        case .antigravityFailed: "Antigravity não respondeu. Rode agy no Terminal para entrar de novo."
+        case .missingCredential: L10n
+            .tr("Management credential unavailable. Start the app through the agent-kit launcher.")
+        case .invalidURL: L10n.tr("The proxy must use HTTP on 127.0.0.1.")
+        case let .http(status): L10n.tr("Request unavailable (HTTP %ld).", status)
+        case .invalidResponse: L10n.tr("The service returned incompatible data.")
+        case .historyUnavailable: L10n.tr("Could not read the local proxy history.")
+        case .invalidHistory: L10n.tr("The history contains incompatible data.")
+        case .antigravityUnavailable: L10n.tr("agy not found. Install the Antigravity CLI.")
+        case .antigravityFailed: L10n.tr("Antigravity did not respond. Run agy in Terminal to sign in again.")
         }
     }
 }
 
 public enum Display {
     public static func compact(_ value: Int64) -> String {
-        if value >= 1_000_000_000 { return String(format: "%.2f bi", Double(value) / 1e9) }
-        if value >= 1_000_000 { return String(format: "%.1f mi", Double(value) / 1e6) }
-        if value >= 1000 { return String(format: "%.1f mil", Double(value) / 1000) }
+        if value >= 1_000_000_000 { return L10n.tr("%.2f B", Double(value) / 1e9) }
+        if value >= 1_000_000 { return L10n.tr("%.1f M", Double(value) / 1e6) }
+        if value >= 1000 { return L10n.tr("%.1f K", Double(value) / 1000) }
         return String(value)
     }
 
     public static func reset(_ date: Date?, now: Date = Date()) -> String {
-        guard let date else { return "reset indisponível" }
+        guard let date else { return L10n.tr("reset unavailable") }
         let minutes = max(0, Int(date.timeIntervalSince(now) / 60))
-        if minutes < 60 { return "reset em \(minutes) min" }
-        if minutes < 2880 { return String(format: "reset em %dh%02d", minutes / 60, minutes % 60) }
-        return "reset em \(minutes / 1440)d \(minutes % 1440 / 60)h"
+        if minutes < 60 { return L10n.tr("resets in %ld min", minutes) }
+        if minutes < 2880 { return L10n.tr("resets in %ldh%02ld", minutes / 60, minutes % 60) }
+        return L10n.tr("resets in %ldd %ldh", minutes / 1440, minutes % 1440 / 60)
     }
 }

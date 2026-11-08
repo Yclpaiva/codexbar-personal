@@ -101,7 +101,7 @@ private final class GridTabView: NSView {
     init(frame: NSRect, tab: ProviderGridView.Tab, selected: Bool) {
         self.isSelected = selected
         super.init(frame: frame)
-        let title = tab.provider?.title ?? "Geral"
+        let title = tab.provider?.title ?? L10n.tr("Overview")
         let foreground: NSColor = selected ? .white : .labelColor
         let icon = NSImageView(frame: NSRect(x: (frame.width - 18) / 2, y: 30, width: 18, height: 18))
         icon.image = tab.provider.map { Icons.provider($0, size: 18) } ?? Icons.overview(size: 18)
@@ -121,7 +121,7 @@ private final class GridTabView: NSView {
         self.setAccessibilityElement(true)
         self.setAccessibilityRole(.button)
         self.setAccessibilityLabel(
-            tab.provider == nil ? "Geral" : "\(title), \(percentText(tab.percent)) usado")
+            tab.provider == nil ? title : L10n.tr("%@, %@ used", title, percentText(tab.percent)))
         self.setAccessibilitySelected(selected)
     }
 
@@ -175,7 +175,7 @@ final class MeterRow: NSView {
         sub.frame = NSRect(x: 18, y: 2, width: menuWidth - 36, height: 13)
         self.addSubview(sub)
         self.setAccessibilityElement(true)
-        self.setAccessibilityLabel("\(title), \(percentText(percent)) usado, \(detail)")
+        self.setAccessibilityLabel(L10n.tr("%@, %@ used, %@", title, percentText(percent), detail))
     }
 
     required init?(coder: NSCoder) { nil }
@@ -210,7 +210,7 @@ final class SummaryRow: NSView {
         [icon, name, sub, bar, value].forEach(self.addSubview)
         self.setAccessibilityElement(true)
         self.setAccessibilityRole(.button)
-        self.setAccessibilityLabel("\(provider.title), \(percentText(percent)) usado, \(detail)")
+        self.setAccessibilityLabel(L10n.tr("%@, %@ used, %@", provider.title, percentText(percent), detail))
     }
 
     required init?(coder: NSCoder) { nil }

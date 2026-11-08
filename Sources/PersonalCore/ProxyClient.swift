@@ -148,7 +148,7 @@ public actor ProxyClient {
         } catch let failure as PersonalError {
             accountError = failure.localizedDescription
         } catch {
-            accountError = "Não foi possível consultar esta conta."
+            accountError = L10n.tr("Could not query this account.")
         }
         if provider == .claude, tier == nil {
             if let data = try? await self.upstream(file, resource: "profile"),
@@ -161,7 +161,7 @@ public actor ProxyClient {
         return AccountQuota(
             id: file.auth_index,
             provider: provider,
-            label: file.email ?? file.label ?? file.name ?? "Conta",
+            label: file.email ?? file.label ?? file.name ?? L10n.tr("Account"),
             tier: tier,
             windows: windows,
             blocked: blocked,

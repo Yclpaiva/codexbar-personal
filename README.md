@@ -13,10 +13,11 @@ ingestion. It can run alongside CodexBar without touching its data.
 
 ## Preview
 
-Screenshots use `--demo`, which shows fictional accounts and quotas.
+Screenshots use `--demo`, which shows fictional accounts and quotas. Numbers use
+the macOS region of the machine that took them, here Brazil's decimal comma.
 
 <p>
-  <img src="docs/images/menu-geral.png" width="340" alt="Geral tab: weekly usage per provider">
+  <img src="docs/images/menu-overview.png" width="340" alt="Overview tab: weekly usage per provider">
   <img src="docs/images/menu-claude.png" width="340" alt="Claude tab: weighted weekly and five-hour pools and accounts">
 </p>
 <p>
@@ -31,9 +32,9 @@ pool is exhausted and its largest plan has weekly limits only:
 <img src="docs/images/menu-bar-item.png" width="89" alt="Menu bar item for Claude: icon, five-hour and weekly meters, 54%">
 <img src="docs/images/menu-bar-item-weekly.png" width="89" alt="Menu bar item for Codex: icon, a single weekly meter, 37%">
 
-Configurações:
+Settings:
 
-<img src="docs/images/settings.png" width="528" alt="Settings: provider visibility and order, menu bar content and refresh interval">
+<img src="docs/images/settings.png" width="572" alt="Settings: provider visibility and order, menu bar content and refresh interval">
 
 ## Build and run
 
@@ -57,6 +58,19 @@ The management API must be on HTTP loopback, by default `127.0.0.1:8317`.
 rejected. The app reads quotas through the proxy's upstream GET bridge; it does
 not generate model responses or refresh credentials.
 
+## Languages
+
+The interface follows the language order in System Settings: English, or
+Brazilian Portuguese when it comes first. Numbers, dates and times follow the
+region. Strings live in `Sources/PersonalCore/Resources/*.lproj`, keyed by their
+English text; a check fails if a key in the code lacks a translation or a
+translation changes its format specifiers. To try another language without
+changing the system:
+
+```sh
+open -n '.build/app/CodexBar Personal.app' --args -AppleLanguages '(pt-BR)'
+```
+
 ## Menu and settings
 
 The app has a single menu bar item. By default it shows the provider icon, two
@@ -75,18 +89,19 @@ refresh, so the meter comes back when the window resets. The provider tab in the
 menu keeps listing the exhausted five-hour pool with its reset time.
 
 By default the item follows the tab selected in the menu, as in CodexBar:
-clicking Codex shows Codex in the menu bar. The Geral tab shows the visible
+clicking Codex shows Codex in the menu bar. The Overview tab shows the visible
 provider with the highest usage. The settings can instead always show the
 highest, or pin one provider. ` !` marks a failed or overdue update.
 
-The menu opens with a provider grid like the full CodexBar: Geral plus one tab
+The menu opens with a provider grid like the full CodexBar: Overview plus one tab
 per visible provider, each with a small weekly usage bar. Clicking a tab reopens
 the menu on that tab at once, so the menu measures the new content, and the
-menu later opens on the last tab. Geral lists one row per provider; clicking a row opens its tab. Claude and
+menu later opens on the last tab. Overview lists one row per provider; clicking
+a row opens its tab. Claude and
 Codex show the weighted 7d and 5h pools and the accounts; Antigravity shows
 every group the CLI reports.
 
-Configurações… (⌘,) turns providers on and off, reorders them by dragging, and
+Settings… (⌘,) turns providers on and off, reorders them by dragging, and
 sets which provider the menu bar follows, its icon, meters and percentages, and
 how often quotas refresh (5, 10, 15 or 30 minutes). Changes apply immediately
 and live in the app's UserDefaults. A hidden provider is not queried: hiding
@@ -215,7 +230,7 @@ opens the visible dashboard at launch.
 The candidate uses bundle identifier `dev.yuri.CodexBarPersonal` and can live
 alongside the original app in `~/Applications/CodexBar Personal.app`. It does
 not replace `/Applications/CodexBar.app` or change login items. To stop it, use
-Sair in its menu; the original app and all existing data remain available.
+Quit in its menu; the original app and all existing data remain available.
 
 ## License
 

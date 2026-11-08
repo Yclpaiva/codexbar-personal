@@ -136,7 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 self.proxyError = nil
                 self.dashboard?.reload()
             } catch {
-                self?.proxyError = "Não foi possível atualizar as cotas."
+                self?.proxyError = L10n.tr("Could not update quotas.")
             }
             self?.dataChanged()
         }
@@ -193,11 +193,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.image = statusImage(icon: icon, bars: settings.showBars ? content : nil, stale: stale)
         let text = [content.text, stale ? "!" : nil].compactMap(\.self).joined(separator: " ")
         button.title = button.image == nil || text.isEmpty ? text : " \(text)"
-        let windows = [fiveHours.map { "5h \(percentText($0))" }, week.map { "semana \(percentText($0))" }]
+        let windows = [
+            fiveHours.map { L10n.tr("5h %@", percentText($0)) },
+            week.map { L10n.tr("week %@", percentText($0)) },
+        ]
             .compactMap(\.self).joined(separator: " · ")
-        button.toolTip = provider.map { "\($0.title) · \(windows.isEmpty ? "sem dados" : "\(windows) usados")" }
+        button.toolTip = provider
+            .map { "\($0.title) · \(windows.isEmpty ? L10n.tr("no data") : L10n.tr("%@ used", windows))" }
             ?? "CodexBar Personal"
-        button.toolTip? += stale ? " · atualização pendente" : ""
+        button.toolTip? += stale ? " · \(L10n.tr("update pending"))" : ""
         button.setAccessibilityLabel(button.toolTip)
     }
 
@@ -231,7 +235,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func addContent() {
         if self.settings.visible.isEmpty {
-            self.heading("Nenhum provedor visível. Ative um em Configurações.")
+            self.heading(L10n.tr("No visible provider. Turn one on in Settings."))
         } else {
             self.menu.addItem(.separator())
             switch self.settings.tab {
@@ -242,13 +246,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         }
         self.menu.addItem(.separator())
-        self.action("Atualizar cotas", #selector(self.refreshNow), key: "r")
+        self.action(L10n.tr("Refresh quotas"), #selector(self.refreshNow), key: "r")
         if self.settings.visible.contains(where: { $0.proxy != nil }) {
-            self.action("Histórico do proxy…", #selector(self.openDashboard), key: "d")
+            self.action(L10n.tr("Proxy history…"), #selector(self.openDashboard), key: "d")
         }
-        self.action("Configurações…", #selector(self.openSettings), key: ",")
+        self.action(L10n.tr("Settings…"), #selector(self.openSettings), key: ",")
         self.menu.addItem(.separator())
-        self.action("Sair", #selector(self.quit), key: "q")
+        self.action(L10n.tr("Quit"), #selector(self.quit), key: "q")
     }
 
     private func addOverview() {
@@ -266,31 +270,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func overviewDetail(_ provider: MenuProvider) -> String {
         if self.isStale(provider), provider.proxy == nil ? self.antigravityError != nil : self.proxyError != nil {
-            return "falha na última atualização"
+            return L10n.tr("last update failed")
         }
         if let proxy = provider.proxy {
             return self.snapshot?.pools.first { $0.provider == proxy && $0.key == "7d" }
-                .map { Display.reset($0.resetsAt) } ?? "sem dados"
+                .map { Display.reset($0.resetsAt) } ?? L10n.tr("no data")
         }
         let weekly = self.antigravityQuota?.groups.flatMap(\.windows)
             .filter { ["gemini-weekly", "3p-weekly"].contains($0.key) }
             .max { $0.usedPercent < $1.usedPercent }
-        return weekly.map { Display.reset($0.resetsAt) } ?? "sem dados"
+        return weekly.map { Display.reset($0.resetsAt) } ?? L10n.tr("no data")
     }
 
     private func addProxy(_ provider: Provider) {
         if let proxyError { self.heading(proxyError) }
-        if self.proxy == nil, !self.demo { self.heading("Inicie pelo launcher para acessar o proxy.") }
+        if self.proxy == nil,
+           !self.demo { self.heading(L10n.tr("Start the app through the launcher to reach the proxy.")) }
         guard let snapshot else { return }
         for key in ["7d", "5h"] {
             guard let pool = snapshot.pools.first(where: { $0.provider == provider && $0.key == key }) else {
                 continue
             }
-            let used = String(format: "%.2f", locale: Locale(identifier: "pt_BR"), pool.usedCapacity)
-            let accounts = pool.included == 1 ? "1 conta" : "\(pool.included) contas"
-            let excluded = pool.excluded > 0 ? " · \(pool.excluded) fora do agregado" : ""
+            let used = String(format: "%.2f", locale: Locale.current, pool.usedCapacity)
+            let accounts = pool.included == 1 ? L10n.tr("1 account") : L10n.tr("%ld accounts", pool.included)
+            let excluded = pool.excluded > 0 ? " · " + L10n.tr("%ld outside the pool", pool.excluded) : ""
             self.meter(
-                title: "\(key == "7d" ? "Semana" : "5 horas") · \(used)x de \(Int(pool.capacity))x",
+                title: key == "7d" ? L10n.tr("Weekly · %@x of %ldx", used, Int(pool.capacity))
+                    : L10n.tr("5 hours · %@x of %ldx", used, Int(pool.capacity)),
                 percent: pool.usedPercent,
                 detail: "\(Display.reset(pool.resetsAt)) · \(accounts)\(excluded)")
         }
@@ -304,19 +310,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if let error = account.error { submenu.addItem(withTitle: error, action: nil, keyEquivalent: "") }
             for window in account.windows {
                 submenu.addItem(
-                    withTitle: "\(window.label): \(Int(window.usedPercent.rounded()))% usado · "
-                        + Display.reset(window.resetsAt),
+                    withTitle: L10n.tr(
+                        "%@: %ld%% used · %@",
+                        window.label,
+                        Int(window.usedPercent.rounded()),
+                        Display.reset(window.resetsAt)),
                     action: nil,
                     keyEquivalent: "")
             }
-            if account.blocked { submenu.addItem(withTitle: "Limite atingido", action: nil, keyEquivalent: "") }
+            if account.blocked { submenu.addItem(withTitle: L10n.tr("Limit reached"), action: nil, keyEquivalent: "") }
             if account.tier?.capacity == nil {
-                submenu.addItem(withTitle: "Fora do agregado ponderado", action: nil, keyEquivalent: "")
+                submenu.addItem(withTitle: L10n.tr("Outside the weighted pool"), action: nil, keyEquivalent: "")
             }
             item.submenu = submenu
             self.menu.addItem(item)
         }
-        self.heading("Atualizado às \(snapshot.updatedAt.formatted(date: .omitted, time: .shortened))")
+        self.heading(L10n.tr("Updated at %@", snapshot.updatedAt.formatted(date: .omitted, time: .shortened)))
     }
 
     private func addAntigravity() {
@@ -324,19 +333,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
            !self.demo { self.heading(PersonalError.antigravityUnavailable.localizedDescription) }
         if let antigravityError { self.heading(antigravityError) }
         guard let quota = self.antigravityQuota else {
-            if self.antigravityTask != nil { self.heading("Consultando o agy…") }
+            if self.antigravityTask != nil { self.heading(L10n.tr("Checking agy…")) }
             return
         }
         for group in quota.groups {
             for window in group.windows.sorted(by: { ($0.minutes ?? 0) > ($1.minutes ?? 0) }) {
-                let name = window.minutes == 10080 ? "semana" : window.minutes == 300 ? "5 horas" : window.label
+                let name = window.minutes == 10080 ? L10n.tr("weekly") : window.minutes == 300 ? L10n
+                    .tr("5 hours") : window.label
                 self.meter(
                     title: "\(group.name) · \(name)",
                     percent: window.usedPercent,
                     detail: Display.reset(window.resetsAt))
             }
         }
-        self.heading("Atualizado às \(quota.updatedAt.formatted(date: .omitted, time: .shortened))")
+        self.heading(L10n.tr("Updated at %@", quota.updatedAt.formatted(date: .omitted, time: .shortened)))
     }
 
     private func meter(title: String, percent: Double, detail: String) {
@@ -387,10 +397,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let proxy = provider.proxy else {
             return self.antigravity == nil && !self.demo
                 ? (PersonalError.antigravityUnavailable.localizedDescription, false)
-                : ("agy CLI · conta logada no agy", true)
+                : (L10n.tr("agy CLI · account signed in to agy"), true)
         }
         let count = self.snapshot?.accounts.filter { $0.provider == proxy }.count ?? 0
-        return (count > 0 ? "Taproot · \(count) contas" : "Taproot", true)
+        return (count > 0 ? L10n.tr("Taproot · %ld accounts", count) : "Taproot", true)
     }
 
     private func apply(_ changed: PersonalSettings) {

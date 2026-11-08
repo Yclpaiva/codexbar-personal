@@ -35,10 +35,10 @@ public enum BarPercent: String, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .week: "Semana"
-        case .fiveHours: "5 horas"
-        case .both: "5 horas e semana"
-        case .none: "Nenhum"
+        case .week: L10n.tr("Weekly")
+        case .fiveHours: L10n.tr("5 hours")
+        case .both: L10n.tr("5 hours and weekly")
+        case .none: L10n.tr("None")
         }
     }
 }

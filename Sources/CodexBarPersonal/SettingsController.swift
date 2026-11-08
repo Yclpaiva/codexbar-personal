@@ -24,7 +24,7 @@ final class SettingsController: NSWindowController, NSWindowDelegate, NSTableVie
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false)
-        window.title = "Configurações"
+        window.title = L10n.tr("Settings")
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self
@@ -54,26 +54,26 @@ final class SettingsController: NSWindowController, NSWindowDelegate, NSTableVie
         scroll.borderType = .noBorder
         scroll.drawsBackground = false
 
-        self.barProvider.addItems(withTitles: ["Aba selecionada", "Provedor com maior uso"]
+        self.barProvider.addItems(withTitles: [L10n.tr("Selected tab"), L10n.tr("Highest usage")]
             + MenuProvider.allCases.map(\.title))
         self.barPercent.addItems(withTitles: BarPercent.allCases.map(\.title))
-        self.refresh.addItems(withTitles: PersonalSettings.refreshChoices.map { "\($0) minutos" })
+        self.refresh.addItems(withTitles: PersonalSettings.refreshChoices.map { L10n.tr("%ld minutes", $0) })
         for control in [self.barProvider, self.barPercent, self.refresh, self.showIcon, self.showBars] {
             control.target = self
             control.action = #selector(self.barChanged)
         }
         self.showIcon.controlSize = .small
         self.showBars.controlSize = .small
-        self.showIcon.setAccessibilityLabel("Ícone do provedor")
-        self.showBars.setAccessibilityLabel("Barras de 5 horas e semana")
+        self.showIcon.setAccessibilityLabel(L10n.tr("Provider icon"))
+        self.showBars.setAccessibilityLabel(L10n.tr("5-hour and weekly meters"))
         self.syncControls()
 
         let grid = NSGridView(views: [
-            [Self.label("Mostrar"), self.barProvider],
-            [Self.label("Ícone do provedor"), self.showIcon],
-            [Self.label("Barras de 5 horas e semana"), self.showBars],
-            [Self.label("Percentual"), self.barPercent],
-            [Self.label("Atualizar a cada"), self.refresh],
+            [Self.label(L10n.tr("Show")), self.barProvider],
+            [Self.label(L10n.tr("Provider icon")), self.showIcon],
+            [Self.label(L10n.tr("5-hour and weekly meters")), self.showBars],
+            [Self.label(L10n.tr("Percentage")), self.barPercent],
+            [Self.label(L10n.tr("Refresh every")), self.refresh],
         ])
         grid.column(at: 0).xPlacement = .leading
         grid.column(at: 1).xPlacement = .trailing
@@ -85,9 +85,9 @@ final class SettingsController: NSWindowController, NSWindowDelegate, NSTableVie
         }
 
         let stack = NSStackView(views: [
-            Self.caption("Mostrar no menu · arraste para reordenar"),
+            Self.caption(L10n.tr("Show in menu · drag to reorder")),
             scroll,
-            Self.caption("Barra de menus"),
+            Self.caption(L10n.tr("Menu bar")),
             grid,
         ])
         stack.orientation = .vertical
@@ -162,7 +162,7 @@ final class SettingsController: NSWindowController, NSWindowDelegate, NSTableVie
         toggle.tag = row
         toggle.target = self
         toggle.action = #selector(self.toggled(_:))
-        toggle.setAccessibilityLabel("Mostrar \(provider.title)")
+        toggle.setAccessibilityLabel(L10n.tr("Show %@", provider.title))
         let row = NSStackView(views: [icon, text, NSView(), toggle])
         row.spacing = 10
         row.translatesAutoresizingMaskIntoConstraints = false

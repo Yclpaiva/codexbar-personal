@@ -286,7 +286,7 @@ struct PersonalCoreTests {
         try expect(reloaded.headline { _ in nil } == nil)
         try expect(BarMode.choices.allSatisfy { BarMode(stored: $0.stored) == $0 })
         let now = Date()
-        try expect(Display.reset(now.addingTimeInterval(125 * 60 + 30), now: now) == "reset em 2h05")
+        try expect(Display.reset(now.addingTimeInterval(125 * 60 + 30), now: now).hasSuffix(" 2h05"))
     }
 
     func `menu bar drops an exhausted or missing five hour lane and follows it in the percentages`() throws {
@@ -306,6 +306,41 @@ struct PersonalCoreTests {
         try expect(MenuBarContent(fiveHours: nil, week: nil, percent: .both).text == "—")
         try expect(PersonalSettings(barPercent: .fiveHours).rankingWindow == .fiveHours)
         try expect(PersonalSettings(barPercent: .both).rankingWindow == .week)
+    }
+
+    func `every localized key used in the sources has a Portuguese translation`() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let resources = root.appendingPathComponent("Sources/PersonalCore/Resources")
+        func table(_ language: String) throws -> [String: String] {
+            try require(NSDictionary(contentsOf: resources.appendingPathComponent(
+                "\(language).lproj/Localizable.strings")) as? [String: String])
+        }
+        let english = try table("en"), portuguese = try table("pt-BR")
+        let pattern = try NSRegularExpression(pattern: #"L10n\s*\.tr\(\s*"((?:[^"\\]|\\.)*)""#)
+        var keys = Set<String>()
+        let files = FileManager.default.enumerator(
+            at: root.appendingPathComponent("Sources"),
+            includingPropertiesForKeys: nil)
+        while let file = files?.nextObject() as? URL {
+            guard file.pathExtension == "swift" else { continue }
+            let text = try String(contentsOf: file, encoding: .utf8)
+            for match in pattern.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                keys.insert(String(text[Range(match.range(at: 1), in: text)!]).replacingOccurrences(
+                    of: #"\""#,
+                    with: "\""))
+            }
+        }
+        try expect(keys.count > 50)
+        try expect(keys.allSatisfy { english[$0] == $0 && portuguese[$0].map { !$0.isEmpty } == true })
+        try expect(Set(portuguese.keys) == keys && Set(english.keys) == keys)
+        // Format specifiers must survive translation, or String(format:) would read the wrong arguments.
+        let specifiers = try NSRegularExpression(pattern: #"%(?:\d+\$)?[-0-9.]*(?:l{0,2})[@dfs%]"#)
+        func specs(_ value: String) -> [String] {
+            specifiers.matches(in: value, range: NSRange(value.startIndex..., in: value))
+                .map { String(value[Range($0.range, in: value)!]) }
+        }
+        try expect(keys.allSatisfy { specs($0) == specs(portuguese[$0] ?? "") })
     }
 
     func `hidden proxy providers cost no account reads`() async throws {
@@ -490,9 +525,11 @@ struct PersonalCoreCheckRunner {
             print("PASS settings keep new providers visible and fall back when the chosen one is hidden")
             try checks.`menu bar drops an exhausted or missing five hour lane and follows it in the percentages`()
             print("PASS menu bar drops an exhausted or missing five hour lane and follows it in the percentages")
+            try checks.`every localized key used in the sources has a Portuguese translation`()
+            print("PASS every localized key used in the sources has a Portuguese translation")
             try await checks.`hidden proxy providers cost no account reads`()
             print("PASS hidden proxy providers cost no account reads")
-            print("14 behavior checks passed")
+            print("15 behavior checks passed")
         } catch {
             print("FAIL: \(error)")
             exit(1)

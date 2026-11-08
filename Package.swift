@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "CodexBarPersonal",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [.executable(name: "CodexBarPersonal", targets: ["CodexBarPersonal"])],
     targets: [
