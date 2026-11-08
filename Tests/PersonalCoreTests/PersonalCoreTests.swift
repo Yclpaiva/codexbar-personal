@@ -275,6 +275,9 @@ struct PersonalCoreTests {
 
         settings.barMode = .highest
         settings.lastTab = .codex
+        settings.showIcon = false
+        settings.showBars = true
+        settings.barPercent = .both
         settings.order = [.antigravity, .codex, .claude]
         settings.save(to: defaults)
         let reloaded = PersonalSettings.load(from: defaults)
@@ -284,6 +287,25 @@ struct PersonalCoreTests {
         try expect(BarMode.choices.allSatisfy { BarMode(stored: $0.stored) == $0 })
         let now = Date()
         try expect(Display.reset(now.addingTimeInterval(125 * 60 + 30), now: now) == "reset em 2h05")
+    }
+
+    func `menu bar drops an exhausted or missing five hour lane and follows it in the percentages`() throws {
+        let both = MenuBarContent(fiveHours: 13, week: 94, percent: .both)
+        try expect(both.fiveHours == 13 && both.week == 94 && both.text == "13% · 94%")
+        try expect(MenuBarContent(fiveHours: 13, week: 94, percent: .week).text == "94%")
+        try expect(MenuBarContent(fiveHours: 13, week: 94, percent: .fiveHours).text == "13%")
+        // Every account with a 5h window is exhausted: only the weekly meter and percentage remain.
+        let exhausted = MenuBarContent(fiveHours: 100, week: 37, percent: .both)
+        try expect(exhausted.fiveHours == nil && exhausted.week == 37 && exhausted.text == "37%")
+        try expect(MenuBarContent(fiveHours: 100, week: 37, percent: .fiveHours).text == "37%")
+        // Weekly-only plans have no 5h pool at all.
+        let weekly = MenuBarContent(fiveHours: nil, week: 100, percent: .fiveHours)
+        try expect(weekly.fiveHours == nil && weekly.text == "100%")
+        try expect(MenuBarContent(fiveHours: 40, week: nil, percent: .week).text == "40%")
+        try expect(MenuBarContent(fiveHours: 13, week: 94, percent: .none).text == nil)
+        try expect(MenuBarContent(fiveHours: nil, week: nil, percent: .both).text == "—")
+        try expect(PersonalSettings(barPercent: .fiveHours).rankingWindow == .fiveHours)
+        try expect(PersonalSettings(barPercent: .both).rankingWindow == .week)
     }
 
     func `hidden proxy providers cost no account reads`() async throws {
@@ -466,9 +488,11 @@ struct PersonalCoreCheckRunner {
             print("PASS antigravity runs agy with private home blocked browser and bounded time")
             try checks.`settings keep new providers visible and fall back when the chosen one is hidden`()
             print("PASS settings keep new providers visible and fall back when the chosen one is hidden")
+            try checks.`menu bar drops an exhausted or missing five hour lane and follows it in the percentages`()
+            print("PASS menu bar drops an exhausted or missing five hour lane and follows it in the percentages")
             try await checks.`hidden proxy providers cost no account reads`()
             print("PASS hidden proxy providers cost no account reads")
-            print("13 behavior checks passed")
+            print("14 behavior checks passed")
         } catch {
             print("FAIL: \(error)")
             exit(1)

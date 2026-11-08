@@ -246,3 +246,47 @@ final class SummaryRow: NSView {
         return true
     }
 }
+
+/// Menu bar image: the provider icon and/or CodexBar-style meters, as one template image so AppKit
+/// tints it for light and dark menu bars. Meters fill with used capacity, like the rest of the app.
+@MainActor
+func statusImage(icon: NSImage?, bars: MenuBarContent?, stale: Bool) -> NSImage? {
+    guard icon != nil || bars != nil else { return nil }
+    let iconWidth: CGFloat = icon == nil ? 0 : 15
+    let barWidth: CGFloat = 15
+    let gap: CGFloat = icon != nil && bars != nil ? 4 : 0
+    let size = NSSize(width: iconWidth + gap + (bars == nil ? 0 : barWidth), height: 18)
+    let image = NSImage(size: size, flipped: false) { _ in
+        if let icon { icon.draw(in: NSRect(x: 0, y: 1.5, width: 15, height: 15)) }
+        guard let bars else { return true }
+        let x = iconWidth + gap
+        func lane(_ y: CGFloat, _ height: CGFloat, _ used: Double?) {
+            let rect = NSRect(x: x, y: y, width: barWidth, height: height)
+            let radius = height / 2
+            NSColor.black.withAlphaComponent(stale ? 0.18 : 0.28).setFill()
+            NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
+            let outline = NSBezierPath(
+                roundedRect: rect.insetBy(dx: 0.5, dy: 0.5),
+                xRadius: radius - 0.5,
+                yRadius: radius - 0.5)
+            outline.lineWidth = 1
+            NSColor.black.withAlphaComponent(stale ? 0.28 : 0.44).setStroke()
+            outline.stroke()
+            guard let used, used > 0 else { return }
+            NSGraphicsContext.saveGraphicsState()
+            NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).addClip()
+            NSColor.black.withAlphaComponent(stale ? 0.55 : 1).setFill()
+            NSRect(x: x, y: y, width: barWidth * min(100, used) / 100, height: height).fill()
+            NSGraphicsContext.restoreGraphicsState()
+        }
+        if let fiveHours = bars.fiveHours, let week = bars.week {
+            lane(9.5, 6, fiveHours)
+            lane(2.5, 4, week)
+        } else {
+            lane(5, 8, bars.week ?? bars.fiveHours)
+        }
+        return true
+    }
+    image.isTemplate = true
+    return image
+}

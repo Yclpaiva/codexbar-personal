@@ -29,6 +29,43 @@ public enum BarWindow: String, CaseIterable, Sendable {
     }
 }
 
+/// Percentages written next to the menu bar icon.
+public enum BarPercent: String, CaseIterable, Sendable {
+    case week, fiveHours = "5h", both, none
+
+    public var title: String {
+        switch self {
+        case .week: "Semana"
+        case .fiveHours: "5 horas"
+        case .both: "5 horas e semana"
+        case .none: "Nenhum"
+        }
+    }
+}
+
+/// Usage drawn in the menu bar item, following CodexBar: a 5h lane above a weekly lane. The 5h lane is
+/// dropped when no visible account has a 5h window or when that pool is exhausted (the weekly-only
+/// accounts still serve), leaving a single weekly meter. Percentages follow the same lanes.
+public struct MenuBarContent: Equatable, Sendable {
+    public let fiveHours: Double?
+    public let week: Double?
+    public let text: String?
+
+    public init(fiveHours: Double?, week: Double?, percent: BarPercent) {
+        let lane = fiveHours.flatMap { $0 >= 100 ? nil : $0 }
+        self.fiveHours = lane
+        self.week = week
+        let values: [Double?] = switch percent {
+        case .week: [week ?? lane]
+        case .fiveHours: [lane ?? week]
+        case .both: [lane, week]
+        case .none: []
+        }
+        let text = values.compactMap(\.self).map { "\(Int($0.rounded()))%" }.joined(separator: " · ")
+        self.text = text.isEmpty ? (percent == .none ? nil : "—") : text
+    }
+}
+
 /// What the menu bar item shows.
 public enum BarMode: Equatable, Sendable {
     /// The provider of the tab selected in the menu, as in CodexBar; the overview shows the highest.
@@ -63,7 +100,9 @@ public struct PersonalSettings: Equatable, Sendable {
     public var order: [MenuProvider]
     public var hidden: Set<MenuProvider>
     public var barMode: BarMode
-    public var barWindow: BarWindow
+    public var showIcon: Bool
+    public var showBars: Bool
+    public var barPercent: BarPercent
     public var refreshMinutes: Int
     /// Last selected tab; nil is the overview.
     public var lastTab: MenuProvider?
@@ -72,7 +111,9 @@ public struct PersonalSettings: Equatable, Sendable {
         order: [MenuProvider] = MenuProvider.allCases,
         hidden: Set<MenuProvider> = [],
         barMode: BarMode = .selectedTab,
-        barWindow: BarWindow = .week,
+        showIcon: Bool = true,
+        showBars: Bool = true,
+        barPercent: BarPercent = .week,
         refreshMinutes: Int = 5,
         lastTab: MenuProvider? = nil)
     {
@@ -80,9 +121,16 @@ public struct PersonalSettings: Equatable, Sendable {
         self.order = (order + MenuProvider.allCases).filter { seen.insert($0).inserted }
         self.hidden = hidden
         self.barMode = barMode
-        self.barWindow = barWindow
+        self.showIcon = showIcon
+        self.showBars = showBars
+        self.barPercent = barPercent
         self.refreshMinutes = Self.refreshChoices.contains(refreshMinutes) ? refreshMinutes : 5
         self.lastTab = lastTab
+    }
+
+    /// Window used to rank providers for "highest usage": five hours only when that is the sole percentage.
+    public var rankingWindow: BarWindow {
+        self.barPercent == .fiveHours ? .fiveHours : .week
     }
 
     public var visible: [MenuProvider] {
@@ -100,7 +148,9 @@ public struct PersonalSettings: Equatable, Sendable {
             hidden: Set((defaults.stringArray(forKey: "hiddenProviders") ?? [])
                 .compactMap(MenuProvider.init(rawValue:))),
             barMode: BarMode(stored: defaults.string(forKey: "barMode")),
-            barWindow: defaults.string(forKey: "barWindow").flatMap(BarWindow.init(rawValue:)) ?? .week,
+            showIcon: defaults.object(forKey: "showIcon") as? Bool ?? true,
+            showBars: defaults.object(forKey: "showBars") as? Bool ?? true,
+            barPercent: defaults.string(forKey: "barPercent").flatMap(BarPercent.init(rawValue:)) ?? .week,
             refreshMinutes: defaults.object(forKey: "refreshMinutes") as? Int ?? 5,
             lastTab: defaults.string(forKey: "lastTab").flatMap(MenuProvider.init(rawValue:)))
     }
@@ -109,7 +159,9 @@ public struct PersonalSettings: Equatable, Sendable {
         defaults.set(self.order.map(\.rawValue), forKey: "providerOrder")
         defaults.set(self.hidden.map(\.rawValue).sorted(), forKey: "hiddenProviders")
         defaults.set(self.barMode.stored, forKey: "barMode")
-        defaults.set(self.barWindow.rawValue, forKey: "barWindow")
+        defaults.set(self.showIcon, forKey: "showIcon")
+        defaults.set(self.showBars, forKey: "showBars")
+        defaults.set(self.barPercent.rawValue, forKey: "barPercent")
         defaults.set(self.refreshMinutes, forKey: "refreshMinutes")
         defaults.set(self.lastTab?.rawValue, forKey: "lastTab")
     }

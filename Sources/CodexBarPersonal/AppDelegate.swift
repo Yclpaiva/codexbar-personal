@@ -181,13 +181,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func updateStatusItem() {
         guard let button = self.statusItem?.button else { return }
-        let window = self.settings.barWindow
-        let headline = self.settings.headline { self.usage($0, window) }
-        let stale = headline.map { self.isStale($0.provider) } ?? !self.settings.visible.isEmpty
-        button.image = headline.map { Icons.provider($0.provider, size: 15) } ?? Icons.overview(size: 15)
-        button.title = " \(percentText(headline?.usedPercent))\(stale ? " !" : "")"
-        let windowName = window == .week ? "semanal" : "de 5 horas"
-        button.toolTip = headline.map { "\($0.provider.title) · cota \(windowName) usada" } ?? "CodexBar Personal"
+        let settings = self.settings
+        let provider = settings.headline { self.usage($0, settings.rankingWindow) }?.provider
+        let fiveHours = provider.flatMap { self.usage($0, .fiveHours) }
+        let week = provider.flatMap { self.usage($0, .week) }
+        let content = MenuBarContent(fiveHours: fiveHours, week: week, percent: settings.barPercent)
+        let stale = provider.map(self.isStale) ?? !settings.visible.isEmpty
+        // Something must remain visible: with every part turned off, the provider icon stays.
+        let showIcon = settings.showIcon || (!settings.showBars && content.text == nil)
+        let icon = showIcon ? provider.flatMap { Icons.provider($0, size: 15) } ?? Icons.overview(size: 15) : nil
+        button.image = statusImage(icon: icon, bars: settings.showBars ? content : nil, stale: stale)
+        let text = [content.text, stale ? "!" : nil].compactMap(\.self).joined(separator: " ")
+        button.title = button.image == nil || text.isEmpty ? text : " \(text)"
+        let windows = [fiveHours.map { "5h \(percentText($0))" }, week.map { "semana \(percentText($0))" }]
+            .compactMap(\.self).joined(separator: " · ")
+        button.toolTip = provider.map { "\($0.title) · \(windows.isEmpty ? "sem dados" : "\(windows) usados")" }
+            ?? "CodexBar Personal"
         button.toolTip? += stale ? " · atualização pendente" : ""
         button.setAccessibilityLabel(button.toolTip)
     }

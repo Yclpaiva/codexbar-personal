@@ -24,9 +24,12 @@ Screenshots use `--demo`, which shows fictional accounts and quotas.
   <img src="docs/images/menu-antigravity.png" width="340" alt="Antigravity tab: Gemini and Claude/GPT groups">
 </p>
 
-Menu bar item, following the selected tab:
+Menu bar item, following the selected tab. Claude shows the five-hour meter
+above the weekly one; Codex shows a single weekly meter because its five-hour
+pool is exhausted and its largest plan has weekly limits only:
 
-<img src="docs/images/menu-bar-item.png" width="70" alt="Menu bar item with the Claude icon and 54%">
+<img src="docs/images/menu-bar-item.png" width="89" alt="Menu bar item for Claude: icon, five-hour and weekly meters, 54%">
+<img src="docs/images/menu-bar-item-weekly.png" width="89" alt="Menu bar item for Codex: icon, a single weekly meter, 37%">
 
 Configurações:
 
@@ -56,12 +59,25 @@ not generate model responses or refresh credentials.
 
 ## Menu and settings
 
-The app has a single menu bar item: a provider icon and its used percentage.
-By default it follows the tab selected in the menu, as in CodexBar: clicking
-Codex shows Codex in the menu bar. The Geral tab shows the visible provider with
-the highest usage. The settings can instead always show the highest, pin one
-provider, or switch to the five-hour window. ` !` marks a failed or overdue
-update.
+The app has a single menu bar item. By default it shows the provider icon, two
+CodexBar-style meters (five hours above, weekly below) and the weekly used
+percentage. Each part can be turned on or off in the settings, and the
+percentage can be weekly, five-hour, both (`13% · 94%`) or none. If every part
+is off, the provider icon stays so the item never disappears. Meters fill with
+used capacity, like the rest of the app.
+
+The five-hour meter appears only while it matters. It is dropped when no visible
+account of the provider has a five-hour window (high plans with weekly limits
+only) and when the five-hour pool of the accounts that have one is exhausted,
+because weekly-only accounts can still serve. A single taller weekly meter
+remains, and the percentages follow the same rule. This is recomputed on every
+refresh, so the meter comes back when the window resets. The provider tab in the
+menu keeps listing the exhausted five-hour pool with its reset time.
+
+By default the item follows the tab selected in the menu, as in CodexBar:
+clicking Codex shows Codex in the menu bar. The Geral tab shows the visible
+provider with the highest usage. The settings can instead always show the
+highest, or pin one provider. ` !` marks a failed or overdue update.
 
 The menu opens with a provider grid like the full CodexBar: Geral plus one tab
 per visible provider, each with a small weekly usage bar. Clicking a tab reopens
@@ -71,11 +87,11 @@ Codex show the weighted 7d and 5h pools and the accounts; Antigravity shows
 every group the CLI reports.
 
 Configurações… (⌘,) turns providers on and off, reorders them by dragging, and
-sets what the menu bar shows and how often quotas refresh (5, 10, 15 or 30
-minutes). Changes apply immediately and live in the app's UserDefaults. A
-hidden provider is not queried: hiding Claude or Codex skips those proxy
-accounts, and hiding Antigravity skips `agy` entirely. Turning a provider back
-on refreshes it at once. `--settings` opens the window at launch.
+sets which provider the menu bar follows, its icon, meters and percentages, and
+how often quotas refresh (5, 10, 15 or 30 minutes). Changes apply immediately
+and live in the app's UserDefaults. A hidden provider is not queried: hiding
+Claude or Codex skips those proxy accounts, and hiding Antigravity skips `agy`
+entirely. Turning a provider back on refreshes it at once. `--settings` opens the window at launch.
 
 `--demo` replaces live data with fictional accounts and quotas, makes no proxy
 or `agy` calls, and keeps its preferences in a separate

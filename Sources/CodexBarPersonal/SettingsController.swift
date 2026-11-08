@@ -10,7 +10,9 @@ final class SettingsController: NSWindowController, NSWindowDelegate, NSTableVie
     private let subtitle: (MenuProvider) -> (text: String, available: Bool)
     private let table = NSTableView()
     private let barProvider = NSPopUpButton()
-    private let barWindow = NSPopUpButton()
+    private let barPercent = NSPopUpButton()
+    private let showIcon = NSSwitch()
+    private let showBars = NSSwitch()
     private let refresh = NSPopUpButton()
     private static let dragType = NSPasteboard.PasteboardType("dev.yuri.CodexBarPersonal.provider")
 
@@ -54,23 +56,33 @@ final class SettingsController: NSWindowController, NSWindowDelegate, NSTableVie
 
         self.barProvider.addItems(withTitles: ["Aba selecionada", "Provedor com maior uso"]
             + MenuProvider.allCases.map(\.title))
-        self.barWindow.addItems(withTitles: ["Semana", "5 horas"])
+        self.barPercent.addItems(withTitles: BarPercent.allCases.map(\.title))
         self.refresh.addItems(withTitles: PersonalSettings.refreshChoices.map { "\($0) minutos" })
-        for popup in [self.barProvider, self.barWindow, self.refresh] {
-            popup.target = self
-            popup.action = #selector(self.popupChanged)
+        for control in [self.barProvider, self.barPercent, self.refresh, self.showIcon, self.showBars] {
+            control.target = self
+            control.action = #selector(self.barChanged)
         }
-        self.syncPopups()
+        self.showIcon.controlSize = .small
+        self.showBars.controlSize = .small
+        self.showIcon.setAccessibilityLabel("Ícone do provedor")
+        self.showBars.setAccessibilityLabel("Barras de 5 horas e semana")
+        self.syncControls()
 
         let grid = NSGridView(views: [
             [Self.label("Mostrar"), self.barProvider],
-            [Self.label("Janela"), self.barWindow],
+            [Self.label("Ícone do provedor"), self.showIcon],
+            [Self.label("Barras de 5 horas e semana"), self.showBars],
+            [Self.label("Percentual"), self.barPercent],
             [Self.label("Atualizar a cada"), self.refresh],
         ])
         grid.column(at: 0).xPlacement = .leading
         grid.column(at: 1).xPlacement = .trailing
         grid.rowSpacing = 10
         grid.rowAlignment = .firstBaseline
+        for row in [1, 2] {
+            grid.row(at: row).rowAlignment = .none
+            grid.row(at: row).yPlacement = .center
+        }
 
         let stack = NSStackView(views: [
             Self.caption("Mostrar no menu · arraste para reordenar"),
@@ -102,15 +114,19 @@ final class SettingsController: NSWindowController, NSWindowDelegate, NSTableVie
         window.setContentSize(content.fittingSize)
     }
 
-    private func syncPopups() {
+    private func syncControls() {
         self.barProvider.selectItem(at: BarMode.choices.firstIndex(of: self.settings.barMode) ?? 0)
-        self.barWindow.selectItem(at: self.settings.barWindow == .week ? 0 : 1)
+        self.showIcon.state = self.settings.showIcon ? .on : .off
+        self.showBars.state = self.settings.showBars ? .on : .off
+        self.barPercent.selectItem(at: BarPercent.allCases.firstIndex(of: self.settings.barPercent) ?? 0)
         self.refresh.selectItem(at: PersonalSettings.refreshChoices.firstIndex(of: self.settings.refreshMinutes) ?? 0)
     }
 
-    @objc private func popupChanged() {
+    @objc private func barChanged() {
         self.settings.barMode = BarMode.choices[max(0, self.barProvider.indexOfSelectedItem)]
-        self.settings.barWindow = self.barWindow.indexOfSelectedItem == 0 ? .week : .fiveHours
+        self.settings.showIcon = self.showIcon.state == .on
+        self.settings.showBars = self.showBars.state == .on
+        self.settings.barPercent = BarPercent.allCases[max(0, self.barPercent.indexOfSelectedItem)]
         self.settings.refreshMinutes = PersonalSettings.refreshChoices[max(0, self.refresh.indexOfSelectedItem)]
         self.onChange?(self.settings)
     }

@@ -28,8 +28,9 @@ public enum Demo {
             account(.claude, "studio@example.com", .ten, 58, 22),
             account(.claude, "personal@example.com", .five, 41, 12),
             account(.claude, "side-project@example.com", .one, 73, nil),
-            account(.codex, "studio@example.com", .twenty, 36, 9),
-            account(.codex, "personal@example.com", .one, 64, 18),
+            // A weekly-only high plan plus an exhausted 5h window: Codex shows a single weekly meter.
+            account(.codex, "studio@example.com", .twenty, 36, nil),
+            account(.codex, "personal@example.com", .one, 64, 100),
             account(.codex, "sandbox@example.com", .free, 12, nil),
         ])
     }
