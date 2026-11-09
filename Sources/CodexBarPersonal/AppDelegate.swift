@@ -249,6 +249,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.action(L10n.tr("Refresh quotas"), #selector(self.refreshNow), key: "r")
         if self.settings.visible.contains(where: { $0.proxy != nil }) {
             self.action(L10n.tr("Proxy history…"), #selector(self.openDashboard), key: "d")
+            self.action(L10n.tr("Open Proxyhub"), #selector(self.openProxyhub), key: "t")
         }
         self.action(L10n.tr("Settings…"), #selector(self.openSettings), key: ",")
         self.menu.addItem(.separator())
@@ -378,6 +379,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
+    /// Opens the proxy's own dashboard in the default browser; `--demo` stays offline.
+    @objc private func openProxyhub() {
+        guard !self.demo, let url = proxyBaseURL() else { return }
+        NSWorkspace.shared.open(url)
+    }
+
     @objc private func openSettings() {
         if self.settingsWindow == nil {
             let controller = SettingsController(settings: self.settings) { [weak self] provider in
@@ -400,7 +407,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 : (L10n.tr("agy CLI · account signed in to agy"), true)
         }
         let count = self.snapshot?.accounts.filter { $0.provider == proxy }.count ?? 0
-        return (count > 0 ? L10n.tr("Taproot · %ld accounts", count) : "Taproot", true)
+        return (count > 0 ? L10n.tr("Proxyhub · %ld accounts", count) : "Proxyhub", true)
     }
 
     private func apply(_ changed: PersonalSettings) {

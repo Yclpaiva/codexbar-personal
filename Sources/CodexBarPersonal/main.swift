@@ -23,11 +23,14 @@ if ProcessInfo.processInfo.environment["CLIPROXY_MANAGEMENT_KEY"] == nil,
     }
 }
 
+/// The proxy's loopback address. Proxyhub serves its dashboard there too, as admin over loopback.
+func proxyBaseURL() -> URL? {
+    URL(string: ProcessInfo.processInfo.environment["CODEXBAR_PERSONAL_PROXY_URL"] ?? "http://127.0.0.1:8317")
+}
+
 func client() throws -> ProxyClient {
-    let environment = ProcessInfo.processInfo.environment
-    let base = URL(string: environment["CODEXBAR_PERSONAL_PROXY_URL"] ?? "http://127.0.0.1:8317")
-    guard let base else { throw PersonalError.invalidURL }
-    return try ProxyClient(base: base, key: environment["CLIPROXY_MANAGEMENT_KEY"] ?? "")
+    guard let base = proxyBaseURL() else { throw PersonalError.invalidURL }
+    return try ProxyClient(base: base, key: ProcessInfo.processInfo.environment["CLIPROXY_MANAGEMENT_KEY"] ?? "")
 }
 
 if ["--probe", "--history", "--antigravity"].contains(where: CommandLine.arguments.contains) {

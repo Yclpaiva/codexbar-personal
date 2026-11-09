@@ -48,6 +48,7 @@
 "Provider icon" = "Ícone do provedor";
 "Proxy history" = "Histórico do proxy";
 "Proxy history…" = "Histórico do proxy…";
+"Open Proxyhub" = "Abrir Proxyhub";
 "Proxy usage" = "Uso do proxy";
 "Quit" = "Sair";
 "Refresh" = "Atualizar";
@@ -63,7 +64,7 @@
 "Show %@" = "Mostrar %@";
 "Show in menu · drag to reorder" = "Mostrar no menu · arraste para reordenar";
 "Start the app through the launcher to reach the proxy." = "Inicie pelo launcher para acessar o proxy.";
-"Taproot · %ld accounts" = "Taproot · %ld contas";
+"Proxyhub · %ld accounts" = "Proxyhub · %ld contas";
 "The history contains incompatible data." = "O histórico contém dados incompatíveis.";
 "The proxy must use HTTP on 127.0.0.1." = "O proxy deve usar HTTP em 127.0.0.1.";
 "The service returned incompatible data." = "O serviço retornou dados incompatíveis.";

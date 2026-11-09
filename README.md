@@ -1,7 +1,7 @@
 # CodexBar Personal
 
 A small macOS menu bar app for a local CLIProxyAPI-compatible proxy pool (such
-as CLIProxyAPI or Taproot). It displays Claude and Codex quotas, per-account
+as CLIProxyAPI, Taproot, or its fork Proxyhub). It displays Claude and Codex quotas, per-account
 plans, weighted paid capacity, reset times, and an on-demand dashboard of proxy
 tokens and estimated API costs. It also shows the Antigravity quota of the
 signed-in `agy` CLI.
@@ -101,7 +101,8 @@ a row opens its tab. Claude and
 Codex show the weighted 7d and 5h pools and the accounts; Antigravity shows
 every group the CLI reports.
 
-Settings… (⌘,) turns providers on and off, reorders them by dragging, and
+Open Proxyhub (⌘T) opens the proxy's dashboard in the browser, at the same loopback
+address the app reads. Settings… (⌘,) turns providers on and off, reorders them by dragging, and
 sets which provider the menu bar follows, its icon, meters and percentages, and
 how often quotas refresh (5, 10, 15 or 30 minutes). Changes apply immediately
 and live in the app's UserDefaults. A hidden provider is not queried: hiding
