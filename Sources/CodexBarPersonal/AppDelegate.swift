@@ -40,6 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.statusItem = item
         self.gridItem.view = self.grid
         self.grid.onSelect = { [weak self] tab in self?.select(tab) }
+        if !self.demo { ResetReminders.shared.start(open: { proxyAccountsURL().map { NSWorkspace.shared.open($0) } }) }
         if self.demo {
             self.snapshot = Demo.snapshot()
             self.antigravityQuota = Demo.antigravity()
@@ -135,6 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 self.snapshot = snapshot
                 self.proxyError = nil
                 self.dashboard?.reload()
+                ResetReminders.shared.sync(snapshot)
             } catch {
                 self?.proxyError = L10n.tr("Could not update quotas.")
             }
@@ -301,10 +303,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 percent: pool.usedPercent,
                 detail: "\(Display.reset(pool.resetsAt)) · \(accounts)\(excluded)")
         }
+        let accounts = snapshot.accounts.filter { $0.provider == provider }
+        let allResets = accounts.flatMap { $0.resetCredits ?? [] }
+            .sorted { ($0 ?? .distantFuture) < ($1 ?? .distantFuture) }
+        if let next = allResets.first {
+            self.action(
+                L10n.tr("%@ · next %@", Display.resetCount(allResets.count), Display.expiry(next)),
+                #selector(self.openProxyhubAccounts),
+                key: "")
+        }
         self.menu.addItem(.separator())
-        for account in snapshot.accounts where account.provider == provider {
+        for account in accounts {
+            let resets = account.resetCredits ?? []
             let item = NSMenuItem(
-                title: "\(account.tier?.rawValue ?? "?") · \(account.label)",
+                title: "\(account.tier?.rawValue ?? "?") · \(account.label)"
+                    + (resets.isEmpty ? "" : " · \(Display.resetCount(resets.count))"),
                 action: nil,
                 keyEquivalent: "")
             let submenu = NSMenu()
@@ -322,6 +335,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if account.blocked { submenu.addItem(withTitle: L10n.tr("Limit reached"), action: nil, keyEquivalent: "") }
             if account.tier?.capacity == nil {
                 submenu.addItem(withTitle: L10n.tr("Outside the weighted pool"), action: nil, keyEquivalent: "")
+            }
+            if !resets.isEmpty {
+                submenu.addItem(.separator())
+                for expiry in resets {
+                    submenu.addItem(
+                        withTitle: L10n.tr("Reset · %@", Display.expiry(expiry)),
+                        action: nil,
+                        keyEquivalent: "")
+                }
+                let use = NSMenuItem(
+                    title: L10n.tr("Use a reset in Proxyhub…"),
+                    action: #selector(self.openProxyhubAccounts),
+                    keyEquivalent: "")
+                use.target = self
+                submenu.addItem(use)
             }
             item.submenu = submenu
             self.menu.addItem(item)
@@ -382,6 +410,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Opens the proxy's own dashboard in the default browser; `--demo` stays offline.
     @objc private func openProxyhub() {
         guard !self.demo, let url = proxyBaseURL() else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    /// Resets are redeemed in Proxyhub, which guards against spending one twice; this app only reads them.
+    @objc private func openProxyhubAccounts() {
+        guard !self.demo, let url = proxyAccountsURL() else { return }
         NSWorkspace.shared.open(url)
     }
 

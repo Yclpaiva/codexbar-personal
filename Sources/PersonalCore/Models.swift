@@ -9,7 +9,7 @@ public enum Provider: String, Codable, CaseIterable, Sendable {
 }
 
 public enum Tier: String, Codable, Sendable {
-    case free = "Free", one = "1x", five = "5x", ten = "10x", twenty = "20x"
+    case free = "Free", one = "1x", five = "5x", ten = "10x", twenty = "20x", fifty = "50x"
 
     public var capacity: Double? {
         switch self {
@@ -18,15 +18,18 @@ public enum Tier: String, Codable, Sendable {
         case .five: 5
         case .ten: 10
         case .twenty: 20
+        case .fifty: 50
         }
     }
 
+    /// Multiples of Plus as OpenAI published them on 2026-11-08: Pro 100, 200 and 500 give 10, 20 and 50x.
     public static func codex(_ plan: String?) -> Self? {
         switch plan?.lowercased().replacingOccurrences(of: "_", with: "").replacingOccurrences(of: "-", with: "") {
         case "free": .free
         case "plus": .one
-        case "prolite": .five
+        case "prolite": .ten
         case "pro": .twenty
+        case "promax": .fifty
         default: nil
         }
     }
@@ -56,6 +59,9 @@ public struct AccountQuota: Codable, Sendable {
     public let windows: [QuotaWindow]
     public let blocked: Bool
     public let error: String?
+    /// Expiry of each saved limit reset still available, soonest first; nil entries never expire.
+    /// Nil when the inventory could not be read, so a failed read is not shown as "no resets".
+    public let resetCredits: [Date?]?
 
     public init(
         id: String,
@@ -64,7 +70,8 @@ public struct AccountQuota: Codable, Sendable {
         tier: Tier?,
         windows: [QuotaWindow],
         blocked: Bool,
-        error: String?)
+        error: String?,
+        resetCredits: [Date?]? = nil)
     {
         self.id = id
         self.provider = provider
@@ -73,6 +80,7 @@ public struct AccountQuota: Codable, Sendable {
         self.windows = windows
         self.blocked = blocked
         self.error = error
+        self.resetCredits = resetCredits
     }
 }
 
@@ -153,5 +161,18 @@ public enum Display {
         if minutes < 60 { return L10n.tr("resets in %ld min", minutes) }
         if minutes < 2880 { return L10n.tr("resets in %ldh%02ld", minutes / 60, minutes % 60) }
         return L10n.tr("resets in %ldd %ldh", minutes / 1440, minutes % 1440 / 60)
+    }
+
+    public static func resetCount(_ count: Int) -> String {
+        count == 1 ? L10n.tr("1 reset") : L10n.tr("%ld resets", count)
+    }
+
+    /// Countdown under two days, calendar date after that.
+    public static func expiry(_ date: Date?, now: Date = Date()) -> String {
+        guard let date else { return L10n.tr("no expiry") }
+        let minutes = max(0, Int(date.timeIntervalSince(now) / 60))
+        if minutes < 60 { return L10n.tr("expires in %ld min", minutes) }
+        if minutes < 2880 { return L10n.tr("expires in %ldh%02ld", minutes / 60, minutes % 60) }
+        return L10n.tr("expires %@", date.formatted(date: .abbreviated, time: .omitted))
     }
 }

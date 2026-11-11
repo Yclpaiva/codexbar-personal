@@ -101,6 +101,13 @@ a row opens its tab. Claude and
 Codex show the weighted 7d and 5h pools and the accounts; Antigravity shows
 every group the CLI reports.
 
+Saved limit resets (Claude's "Reset for free" and Codex rate-limit reset
+credits) show under the pools as a count with the next expiry, next to each
+account that has one, and one line per reset in the account's submenu. The app
+only reads them: the line under the pools and "Use a reset in Proxyhub…" open
+Proxyhub's account page, where they are redeemed. macOS reminds you one day and
+one hour before a reset expires; clicking the reminder opens the same page.
+
 Open Proxyhub (⌘T) opens the proxy's dashboard in the browser, at the same loopback
 address the app reads. Settings… (⌘,) turns providers on and off, reorders them by dragging, and
 sets which provider the menu bar follows, its icon, meters and percentages, and
@@ -122,8 +129,14 @@ open -n '.build/app/CodexBar Personal.app' --args --demo
 - Quotas update on launch, at the configured interval, on wake, or manually. Concurrent
   refreshes share one task, manual attempts are spaced by at least 15 seconds,
   and at most two upstream account reads are in flight.
+- Claude's resets come in the usage response (`cedar_ember=1`), at no extra
+  request. Codex needs one more read per account, `wham/rate-limit-reset-credits`,
+  only after its usage read succeeds. A failed reset read shows nothing for that
+  account and keeps its pending reminders, instead of showing zero resets.
 - Claude profile tiers are cached for one hour, bounded by the active pool.
   Claude Max 20x counts as 10x capacity, following the author's existing policy.
+  Codex plans count as multiples of Plus, per OpenAI's 2026-11-08 figures:
+  Plus 1x, Pro 100 (`prolite`) 10x, Pro 200 (`pro`) 20x, Pro 500 (`promax`) 50x.
   Unknown plans, Free accounts, missing windows, and failed accounts are excluded
   from weighted pools and remain visible individually.
 - The menu uses native AppKit controls; only the provider grid and usage rows are

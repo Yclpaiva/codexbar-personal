@@ -11,8 +11,13 @@ public enum Demo {
                 resetsAt: now.addingTimeInterval(hours * 3600),
                 minutes: key == "5h" ? 300 : 10080)
         }
-        func account(_ provider: Provider, _ label: String, _ tier: Tier, _ week: Double, _ session: Double?)
-            -> AccountQuota
+        func account(
+            _ provider: Provider,
+            _ label: String,
+            _ tier: Tier,
+            _ week: Double,
+            _ session: Double?,
+            resetDays: [Double] = []) -> AccountQuota
         {
             let windows = [window("7d", week, hours: 52)] + (session.map { [window("5h", $0, hours: 3.2)] } ?? [])
             return AccountQuota(
@@ -22,14 +27,15 @@ public enum Demo {
                 tier: tier,
                 windows: windows,
                 blocked: week >= 100,
-                error: nil)
+                error: nil,
+                resetCredits: resetDays.map { now.addingTimeInterval($0 * 86400) })
         }
         return QuotaSnapshot(updatedAt: now, accounts: [
-            account(.claude, "studio@example.com", .ten, 58, 22),
-            account(.claude, "personal@example.com", .five, 41, 12),
+            account(.claude, "studio@example.com", .ten, 58, 22, resetDays: [7.8]),
+            account(.claude, "personal@example.com", .five, 41, 12, resetDays: [120, 120]),
             account(.claude, "side-project@example.com", .one, 73, nil),
             // A weekly-only high plan plus an exhausted 5h window: Codex shows a single weekly meter.
-            account(.codex, "studio@example.com", .twenty, 36, nil),
+            account(.codex, "studio@example.com", .twenty, 36, nil, resetDays: [21, 22]),
             account(.codex, "personal@example.com", .one, 64, 100),
             account(.codex, "sandbox@example.com", .free, 12, nil),
         ])

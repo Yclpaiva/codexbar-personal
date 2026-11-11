@@ -136,14 +136,20 @@ public actor ProxyClient {
         var windows: [QuotaWindow] = []
         var blocked = false
         var accountError: String?
+        var resetCredits: [Date?]?
         do {
-            let data = try await self.upstream(file, resource: "usage")
+            // Claude returns its saved limit resets in the usage response when asked; Codex needs its own read.
+            let data = try await self.upstream(file, path: provider == .claude ? "usage?cedar_ember=1" : "usage")
             windows = try QuotaParser.windows(provider: provider, data: data)
             blocked = windows.contains { $0.usedPercent >= 100 }
             if provider == .codex {
                 let details = try QuotaParser.codexDetails(data)
                 tier = details.0 ?? tier
                 blocked = blocked || details.1
+                resetCredits = try? await QuotaParser.codexResetCredits(
+                    self.upstream(file, path: "rate-limit-reset-credits"))
+            } else {
+                resetCredits = QuotaParser.claudeResetCredits(data)
             }
         } catch let failure as PersonalError {
             accountError = failure.localizedDescription
@@ -151,7 +157,7 @@ public actor ProxyClient {
             accountError = L10n.tr("Could not query this account.")
         }
         if provider == .claude, tier == nil {
-            if let data = try? await self.upstream(file, resource: "profile"),
+            if let data = try? await self.upstream(file, path: "profile"),
                let resolved = try? QuotaParser.claudeTier(data)
             {
                 tier = resolved
@@ -165,23 +171,26 @@ public actor ProxyClient {
             tier: tier,
             windows: windows,
             blocked: blocked,
-            error: accountError)
+            error: accountError,
+            resetCredits: resetCredits)
     }
 
-    private func upstream(_ file: Credential, resource: String) async throws -> Data {
+    /// GET through the proxy's bridge; `path` is relative to the provider's OAuth (Claude) or wham (Codex) API.
+    private func upstream(_ file: Credential, path: String) async throws -> Data {
         let claude = file.type == "claude"
         var headers = [
             "Authorization": "Bearer $TOKEN$",
             "Accept": "application/json",
-            "User-Agent": claude ? "claude-code/2.1.0" : "codex_cli_rs",
+            // Anthropic lists saved resets only to the Claude Code CLI surface; other agents get
+            // `ineligible_reason: "surface"`. Same identity as Proxyhub's own quota cards.
+            "User-Agent": claude ? "claude-cli/2.1.280 (external, cli)" : "codex_cli_rs",
         ]
         if claude { headers["anthropic-beta"] = "oauth-2025-04-20" }
         let payload: [String: Any] = [
             "auth_index": file.auth_index,
             "method": "GET",
             "header": headers,
-            "url": claude ? "https://api.anthropic.com/api/oauth/\(resource)"
-                : "https://chatgpt.com/backend-api/wham/usage",
+            "url": (claude ? "https://api.anthropic.com/api/oauth/" : "https://chatgpt.com/backend-api/wham/") + path,
         ]
         let data = try await self.request("requests/api-call", body: JSONSerialization.data(withJSONObject: payload))
         let wrapped = try JSONDecoder().decode(Wrapped.self, from: data)

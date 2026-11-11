@@ -2,8 +2,12 @@
 "%.1f K" = "%.1f K";
 "%.1f M" = "%.1f M";
 "%.2f B" = "%.2f B";
+"%@ reset expires in 1 day" = "%@ reset expires in 1 day";
+"%@ reset expires in 1 hour" = "%@ reset expires in 1 hour";
 "%@ to %@ · updated at %@" = "%@ to %@ · updated at %@";
 "%@ used" = "%@ used";
+"%@ · next %@" = "%@ · next %@";
+"%@ · Use it in Proxyhub before it expires." = "%@ · Use it in Proxyhub before it expires.";
 "%@, %@ used" = "%@, %@ used";
 "%@, %@ used, %@" = "%@, %@ used, %@";
 "%@: %@ tokens" = "%@: %@ tokens";
@@ -14,7 +18,9 @@
 "%ld minutes" = "%ld minutes";
 "%ld outside the pool" = "%ld outside the pool";
 "%ld requests without a price; cost shows the known subtotal." = "%ld requests without a price; cost shows the known subtotal.";
+"%ld resets" = "%ld resets";
 "1 account" = "1 account";
+"1 reset" = "1 reset";
 "5 hours" = "5 hours";
 "5 hours and weekly" = "5 hours and weekly";
 "5 hours · %@x of %ldx" = "5 hours · %@x of %ldx";
@@ -29,6 +35,9 @@
 "Could not read the local proxy history." = "Could not read the local proxy history.";
 "Could not update quotas." = "Could not update quotas.";
 "Estimated cost" = "Estimated cost";
+"expires %@" = "expires %@";
+"expires in %ld min" = "expires in %ld min";
+"expires in %ldh%02ld" = "expires in %ldh%02ld";
 "Highest usage" = "Highest usage";
 "History from other apps is kept separately." = "History from other apps is kept separately.";
 "History unavailable" = "History unavailable";
@@ -38,6 +47,7 @@
 "Menu bar" = "Menu bar";
 "Model" = "Model";
 "No data" = "No data";
+"no expiry" = "no expiry";
 "No price" = "No price";
 "No visible provider. Turn one on in Settings." = "No visible provider. Turn one on in Settings.";
 "None" = "None";
@@ -57,6 +67,7 @@
 "Refreshing…" = "Refreshing…";
 "Request unavailable (HTTP %ld)." = "Request unavailable (HTTP %ld).";
 "Requests" = "Requests";
+"Reset · %@" = "Reset · %@";
 "Selected tab" = "Selected tab";
 "Settings" = "Settings";
 "Settings…" = "Settings…";
@@ -71,6 +82,7 @@
 "Tokens per day · max %@" = "Tokens per day · max %@";
 "Tokens per day. %@" = "Tokens per day. %@";
 "Updated at %@" = "Updated at %@";
+"Use a reset in Proxyhub…" = "Use a reset in Proxyhub…";
 "Weekly" = "Weekly";
 "Weekly · %@x of %ldx" = "Weekly · %@x of %ldx";
 "agy CLI · account signed in to agy" = "agy CLI · account signed in to agy";

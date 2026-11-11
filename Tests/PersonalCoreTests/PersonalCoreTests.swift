@@ -42,6 +42,8 @@ struct PersonalCoreTests {
         let windows = try QuotaParser.windows(provider: .codex, data: data)
         try expect(windows.map(\.key) == ["7d", "5h"])
         try expect(windows.first?.resetsAt == Date(timeIntervalSince1970: 1_794_000_000))
+        let free = Data(#"{"rate_limit":{"primary_window":{"used_percent":43,"limit_window_seconds":2592000}}}"#.utf8)
+        try expect(try QuotaParser.windows(provider: .codex, data: free).map(\.key) == ["30d"])
     }
 
     func `claude supports structured and legacy quotas without duplicate session windows`() throws {
@@ -72,8 +74,10 @@ struct PersonalCoreTests {
         }
     }
 
-    func `tiers preserve Yuri effective Claude max capacity and Codex pro lite`() throws {
-        try expect(Tier.codex("pro_lite") == .five)
+    func `tiers preserve Yuri effective Claude max capacity and Codex Pro multiples`() throws {
+        try expect(Tier.codex("pro_lite") == .ten)
+        try expect(Tier.codex("promax") == .fifty)
+        try expect(Tier.codex("pro-max") == .fifty)
         try expect(Tier.codex("pro") == .twenty)
         try expect(try QuotaParser
             .claudeTier(Data(#"{"organization":{"rate_limit_tier":"default_claude_max_20x"}}"#.utf8)) == .ten)
@@ -160,9 +164,10 @@ struct PersonalCoreTests {
             return snapshots
         }
         try expect(snapshots.count == 8)
-        try expect(snapshots.allSatisfy { $0.accounts.count == 1 && $0.accounts[0].tier == .five })
+        try expect(snapshots.allSatisfy { $0.accounts.count == 1 && $0.accounts[0].tier == .ten })
+        try expect(snapshots[0].accounts[0].resetCredits?.count == 1)
         let requests = await transport.requests
-        try expect(requests.count == 2)
+        try expect(requests.count == 3)
         try expect(requests.allSatisfy { $0.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-key" })
         let body = try require(requests.last?.httpBody)
         let payload = try require(JSONSerialization.jsonObject(with: body) as? [String: Any])
@@ -359,6 +364,46 @@ struct PersonalCoreTests {
         try expect(Usage.percent(.claude, window: .week, snapshot: both, antigravity: quota) == nil)
     }
 
+    func `saved limit resets count only usable grants and credits soonest first`() throws {
+        let claude = Data(
+            #"""
+            {"cedar_ember":{"eligible":true,"grants":[
+              {"resets_left":1,"starts_at":"2026-11-09T18:00:00+00:00","ends_at":"2027-03-09T07:59:00+00:00","paused":false},
+              {"resets_left":2,"ends_at":null,"paused":false},
+              {"resets_left":1,"ends_at":"2026-11-17T07:59:00+00:00","paused":false},
+              {"resets_left":1,"ends_at":"2026-12-01T00:00:00+00:00","paused":true},
+              {"resets_left":1,"starts_at":"2026-12-01T00:00:00+00:00","paused":false},
+              {"resets_left":0,"paused":false},
+              {"resets_left":1,"ends_at":"2026-11-01T00:00:00+00:00","paused":false},
+              {"resets_left":"1","paused":false}]}}
+            """#.utf8)
+        let resets = try require(QuotaParser.claudeResetCredits(claude, now: Self.resetNow))
+        try expect(resets.count == 4)
+        try expect(resets[0] == ISO8601DateFormatter().date(from: "2026-11-17T07:59:00Z"))
+        try expect(resets[1] == ISO8601DateFormatter().date(from: "2027-03-09T07:59:00Z"))
+        try expect(resets[2] == nil && resets[3] == nil)
+        try expect(QuotaParser.claudeResetCredits(Data(#"{"cedar_ember":{"eligible":false,"grants":[]}}"#.utf8)) == nil)
+        try expect(QuotaParser.claudeResetCredits(Data(#"{"five_hour":{}}"#.utf8)) == nil)
+
+        let codex = Data(
+            #"""
+            {"available_count":2,"credits":[
+              {"status":"available","expires_at":"2026-12-01T22:17:43.978726Z"},
+              {"status":"available","expires_at":"2026-11-30T19:28:46.435195Z"},
+              {"status":"redeemed","expires_at":"2026-11-30T19:28:46Z"},
+              {"status":"available","expires_at":"2026-11-01T00:00:00Z"}]}
+            """#.utf8)
+        let credits = try require(QuotaParser.codexResetCredits(codex, now: Self.resetNow))
+        try expect(credits.count == 2)
+        try expect(credits.allSatisfy { $0 != nil })
+        try expect(credits[0]! < credits[1]!)
+        try expect(QuotaParser.codexResetCredits(Data(#"{"detail":"Unauthorized"}"#.utf8)) == nil)
+    }
+
+    private static var resetNow: Date {
+        ISO8601DateFormatter().date(from: "2026-11-09T20:00:00Z")!
+    }
+
     private static var antigravityReport: Data {
         Data(#"""
         {"status":"SUCCESS","command":{"name":"usage","data":{"groups":[
@@ -452,6 +497,14 @@ private actor FixtureTransport: HTTPTransport {
                 data: Data(#"{"files":[{"auth_index":"synthetic","name":"fixture","type":"codex","disabled":false}]}"#
                     .utf8))
         }
+        if let body = request.httpBody,
+           String(data: body, encoding: .utf8)?.contains("rate-limit-reset-credits") == true
+        {
+            let credits = #"{"credits":[{"status":"available","expires_at":"2099-01-01T00:00:00Z"}]}"#
+            return try HTTPReply(
+                status: 200,
+                data: JSONSerialization.data(withJSONObject: ["status_code": self.status, "body": credits]))
+        }
         let body = #"""
         {"plan_type":"pro_lite","rate_limit":{
           "primary_window":{"used_percent":20,"limit_window_seconds":604800}
@@ -500,8 +553,8 @@ struct PersonalCoreCheckRunner {
             print("PASS codex windows use duration rather than primary secondary ordering")
             try checks.`claude supports structured and legacy quotas without duplicate session windows`()
             print("PASS claude supports structured and legacy quotas without duplicate session windows")
-            try checks.`tiers preserve Yuri effective Claude max capacity and Codex pro lite`()
-            print("PASS tiers preserve Yuri effective Claude max capacity and Codex pro lite")
+            try checks.`tiers preserve Yuri effective Claude max capacity and Codex Pro multiples`()
+            print("PASS tiers preserve Yuri effective Claude max capacity and Codex Pro multiples")
             try checks.`cache and reasoning are not billed twice and long context uses whole request rates`()
             print("PASS cache and reasoning are not billed twice and long context uses whole request rates")
             try checks
@@ -529,7 +582,9 @@ struct PersonalCoreCheckRunner {
             print("PASS every localized key used in the sources has a Portuguese translation")
             try await checks.`hidden proxy providers cost no account reads`()
             print("PASS hidden proxy providers cost no account reads")
-            print("15 behavior checks passed")
+            try checks.`saved limit resets count only usable grants and credits soonest first`()
+            print("PASS saved limit resets count only usable grants and credits soonest first")
+            print("16 behavior checks passed")
         } catch {
             print("FAIL: \(error)")
             exit(1)

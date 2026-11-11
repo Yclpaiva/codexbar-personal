@@ -37,7 +37,8 @@ public enum QuotaParser {
             for field in ["primary_window", "secondary_window"] {
                 guard let item = rate[field] as? [String: Any] else { continue }
                 let minutes = (item["limit_window_seconds"] as? Int).map { $0 / 60 }
-                let key = minutes == 300 ? "5h" : minutes == 10080 ? "7d" : minutes.map { "\($0)min" } ?? "?"
+                // Free accounts get a 30-day window: name it in the largest whole unit ("30d", not "43200min").
+                let key = minutes.map { $0 % 1440 == 0 ? "\($0 / 1440)d" : $0 % 60 == 0 ? "\($0 / 60)h" : "\($0)min" } ?? "?"
                 add(key, key, item["used_percent"], item["reset_at"], minutes)
             }
         }
@@ -64,6 +65,40 @@ public enum QuotaParser {
             true { return .one }
         if ["claude_free", "free"].contains(organization["organization_type"] as? String ?? "") { return .free }
         return nil
+    }
+
+    /// `cedar_ember` block of Claude's `/api/oauth/usage?cedar_ember=1`: one entry per reset left in a grant
+    /// that is not paused, has started and has not expired. Nil when the block is missing or the account is
+    /// not eligible; a malformed grant is skipped.
+    public static func claudeResetCredits(_ data: Data, now: Date = Date()) -> [Date?]? {
+        let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+        guard let block = root["cedar_ember"] as? [String: Any], block["eligible"] as? Bool == true else { return nil }
+        var expirations: [Date?] = []
+        for grant in block["grants"] as? [[String: Any]] ?? [] {
+            guard grant["paused"] as? Bool == false, let left = grant["resets_left"] as? Int, left > 0 else { continue }
+            if let starts = Self.date(grant["starts_at"]), starts > now { continue }
+            let ends = Self.date(grant["ends_at"])
+            if let ends, ends <= now { continue }
+            // Grants hold one reset each; a larger count is capped instead of trusted.
+            expirations += Array(repeating: ends, count: min(left, 50))
+        }
+        return Self.soonestFirst(expirations)
+    }
+
+    /// Codex `/wham/rate-limit-reset-credits`: credits with status `available` that have not expired.
+    public static func codexResetCredits(_ data: Data, now: Date = Date()) -> [Date?]? {
+        guard let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let credits = root["credits"] as? [[String: Any]] else { return nil }
+        let expirations = credits.compactMap { credit -> Date?? in
+            guard credit["status"] as? String == "available" else { return nil }
+            let expires = Self.date(credit["expires_at"])
+            return expires.map { $0 > now } ?? true ? .some(expires) : nil
+        }
+        return Self.soonestFirst(expirations)
+    }
+
+    private static func soonestFirst(_ dates: [Date?]) -> [Date?] {
+        dates.sorted { ($0 ?? .distantFuture) < ($1 ?? .distantFuture) }
     }
 
     private static func date(_ value: Any?) -> Date? {

@@ -28,6 +28,15 @@ func proxyBaseURL() -> URL? {
     URL(string: ProcessInfo.processInfo.environment["CODEXBAR_PERSONAL_PROXY_URL"] ?? "http://127.0.0.1:8317")
 }
 
+/// Proxyhub's account page, where saved limit resets are listed and redeemed.
+func proxyAccountsURL() -> URL? {
+    guard let base = proxyBaseURL(), var components = URLComponents(url: base, resolvingAgainstBaseURL: false)
+    else { return nil }
+    components.path = "/"
+    components.fragment = "/accounts"
+    return components.url
+}
+
 func client() throws -> ProxyClient {
     guard let base = proxyBaseURL() else { throw PersonalError.invalidURL }
     return try ProxyClient(base: base, key: ProcessInfo.processInfo.environment["CLIPROXY_MANAGEMENT_KEY"] ?? "")
@@ -48,6 +57,7 @@ if ["--probe", "--history", "--antigravity"].contains(where: CommandLine.argumen
                         "tier": account.tier?.rawValue ?? "unknown",
                         "windows": account.windows.count,
                         "error": account.error != nil,
+                        "resets": account.resetCredits?.count ?? -1,
                     ] as [String: Any]
                 }
                 result["pools"] = snapshot.pools.map { pool in
