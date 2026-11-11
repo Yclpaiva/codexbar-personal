@@ -38,6 +38,7 @@
 "expires %@" = "expira em %@";
 "expires in %ld min" = "expira em %ld min";
 "expires in %ldh%02ld" = "expira em %ldh%02ld";
+"Fable · %@x of %ldx" = "Fable · %@x de %ldx";
 "Highest usage" = "Provedor com maior uso";
 "History from other apps is kept separately." = "Históricos de outros aplicativos são mantidos separadamente.";
 "History unavailable" = "Histórico indisponível";

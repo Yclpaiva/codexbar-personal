@@ -23,7 +23,9 @@ public enum QuotaParser {
                    let scope = limit["scope"] as? [String: Any], let model = scope["model"] as? [String: Any],
                    let label = model["display_name"] as? String
                 {
-                    add(label.lowercased(), label, limit["percent"], limit["resets_at"], 10080)
+                    // Every Fable generation ("Fable", "Fable 5") shares the key the "fable" pool reads.
+                    let key = label.lowercased().hasPrefix("fable") ? "fable" : label.lowercased()
+                    add(key, label, limit["percent"], limit["resets_at"], 10080)
                 }
             }
             for (key, field, minutes) in [("5h", "five_hour", 300), ("7d", "seven_day", 10080)]

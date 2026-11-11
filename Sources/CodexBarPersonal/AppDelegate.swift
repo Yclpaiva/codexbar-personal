@@ -290,16 +290,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if self.proxy == nil,
            !self.demo { self.heading(L10n.tr("Start the app through the launcher to reach the proxy.")) }
         guard let snapshot else { return }
-        for key in ["7d", "5h"] {
+        for key in ["7d", "fable", "5h"] {
             guard let pool = snapshot.pools.first(where: { $0.provider == provider && $0.key == key }) else {
                 continue
             }
             let used = String(format: "%.2f", locale: Locale.current, pool.usedCapacity)
             let accounts = pool.included == 1 ? L10n.tr("1 account") : L10n.tr("%ld accounts", pool.included)
             let excluded = pool.excluded > 0 ? " · " + L10n.tr("%ld outside the pool", pool.excluded) : ""
+            let capacity = Int(pool.capacity)
             self.meter(
-                title: key == "7d" ? L10n.tr("Weekly · %@x of %ldx", used, Int(pool.capacity))
-                    : L10n.tr("5 hours · %@x of %ldx", used, Int(pool.capacity)),
+                title: key == "7d" ? L10n.tr("Weekly · %@x of %ldx", used, capacity)
+                    : key == "fable" ? L10n.tr("Fable · %@x of %ldx", used, capacity)
+                    : L10n.tr("5 hours · %@x of %ldx", used, capacity),
                 percent: pool.usedPercent,
                 detail: "\(Display.reset(pool.resetsAt)) · \(accounts)\(excluded)")
         }

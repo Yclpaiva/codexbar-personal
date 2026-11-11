@@ -74,6 +74,25 @@ struct PersonalCoreTests {
         }
     }
 
+    func `claude fable windows from every account form a weighted fable pool`() throws {
+        func usage(_ name: String, _ percent: Int) -> Data {
+            Data(#"{"limits":[{"kind":"weekly_all","percent":50},{"kind":"weekly_scoped","percent":\#(percent),"scope":{"model":{"display_name":"\#(name)"}}}]}"#.utf8)
+        }
+        let ten = try QuotaParser.windows(provider: .claude, data: usage("Fable", 100))
+        let five = try QuotaParser.windows(provider: .claude, data: usage("Fable 5", 40))
+        try expect(ten.map(\.key) == ["7d", "fable"] && five.map(\.key) == ["7d", "fable"])
+        try expect(five.last?.label == "Fable 5")
+        func account(_ id: String, _ tier: Tier, _ windows: [QuotaWindow]) -> AccountQuota {
+            AccountQuota(id: id, provider: .claude, label: id, tier: tier, windows: windows, blocked: false, error: nil)
+        }
+        let accounts = [account("ten", .ten, ten), account("five", .five, five), account("old", .ten, [ten[0]])]
+        let fable = try require(PoolQuota.calculate(accounts: accounts, provider: .claude, key: "fable"))
+        try expect(fable.capacity == 15 && fable.usedCapacity == 12 && fable.included == 2 && fable.excluded == 1)
+        let pools = Demo.snapshot().pools
+        try expect(pools.contains { $0.provider == .claude && $0.key == "fable" })
+        try expect(!pools.contains { $0.provider == .codex && $0.key == "fable" })
+    }
+
     func `tiers preserve Yuri effective Claude max capacity and Codex Pro multiples`() throws {
         try expect(Tier.codex("pro_lite") == .ten)
         try expect(Tier.codex("promax") == .fifty)
@@ -553,6 +572,8 @@ struct PersonalCoreCheckRunner {
             print("PASS codex windows use duration rather than primary secondary ordering")
             try checks.`claude supports structured and legacy quotas without duplicate session windows`()
             print("PASS claude supports structured and legacy quotas without duplicate session windows")
+            try checks.`claude fable windows from every account form a weighted fable pool`()
+            print("PASS claude fable windows from every account form a weighted fable pool")
             try checks.`tiers preserve Yuri effective Claude max capacity and Codex Pro multiples`()
             print("PASS tiers preserve Yuri effective Claude max capacity and Codex Pro multiples")
             try checks.`cache and reasoning are not billed twice and long context uses whole request rates`()
@@ -584,7 +605,7 @@ struct PersonalCoreCheckRunner {
             print("PASS hidden proxy providers cost no account reads")
             try checks.`saved limit resets count only usable grants and credits soonest first`()
             print("PASS saved limit resets count only usable grants and credits soonest first")
-            print("16 behavior checks passed")
+            print("17 behavior checks passed")
         } catch {
             print("FAIL: \(error)")
             exit(1)

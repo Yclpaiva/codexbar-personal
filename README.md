@@ -98,8 +98,9 @@ per visible provider, each with a small weekly usage bar. Clicking a tab reopens
 the menu on that tab at once, so the menu measures the new content, and the
 menu later opens on the last tab. Overview lists one row per provider; clicking
 a row opens its tab. Claude and
-Codex show the weighted 7d and 5h pools and the accounts; Antigravity shows
-every group the CLI reports.
+Codex show the weighted 7d and 5h pools and the accounts; Claude adds a weighted
+Fable pool from each account's weekly Fable limit. Antigravity shows every group
+the CLI reports.
 
 Saved limit resets (Claude's "Reset for free" and Codex rate-limit reset
 credits) show under the pools as a count with the next expiry, next to each

@@ -121,9 +121,10 @@ public struct QuotaSnapshot: Codable, Sendable {
     public let updatedAt: Date
     public let accounts: [AccountQuota]
 
+    /// Weighted pools per provider: 5h, weekly and, for Claude, the weekly Fable allowance.
     public var pools: [PoolQuota] {
         Provider.allCases.flatMap { provider in
-            ["5h", "7d"].compactMap { PoolQuota.calculate(accounts: self.accounts, provider: provider, key: $0) }
+            ["5h", "7d", "fable"].compactMap { PoolQuota.calculate(accounts: self.accounts, provider: provider, key: $0) }
         }
     }
 }

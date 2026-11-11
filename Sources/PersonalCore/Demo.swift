@@ -17,9 +17,11 @@ public enum Demo {
             _ tier: Tier,
             _ week: Double,
             _ session: Double?,
+            fable: Double? = nil,
             resetDays: [Double] = []) -> AccountQuota
         {
-            let windows = [window("7d", week, hours: 52)] + (session.map { [window("5h", $0, hours: 3.2)] } ?? [])
+            let windows = [window("7d", week, hours: 52)] + (fable.map { [window("fable", $0, hours: 52)] } ?? [])
+                + (session.map { [window("5h", $0, hours: 3.2)] } ?? [])
             return AccountQuota(
                 id: label,
                 provider: provider,
@@ -31,8 +33,8 @@ public enum Demo {
                 resetCredits: resetDays.map { now.addingTimeInterval($0 * 86400) })
         }
         return QuotaSnapshot(updatedAt: now, accounts: [
-            account(.claude, "studio@example.com", .ten, 58, 22, resetDays: [7.8]),
-            account(.claude, "personal@example.com", .five, 41, 12, resetDays: [120, 120]),
+            account(.claude, "studio@example.com", .ten, 58, 22, fable: 64, resetDays: [7.8]),
+            account(.claude, "personal@example.com", .five, 41, 12, fable: 30, resetDays: [120, 120]),
             account(.claude, "side-project@example.com", .one, 73, nil),
             // A weekly-only high plan plus an exhausted 5h window: Codex shows a single weekly meter.
             account(.codex, "studio@example.com", .twenty, 36, nil, resetDays: [21, 22]),
